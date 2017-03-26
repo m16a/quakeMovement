@@ -9,5 +9,13 @@ add_executable(client ${client_SRC})
 add_executable(server ${server_SRC})
 
 find_library(RAKNET_LIBRARY NAMES libRakNetDLL.so PATHS ${CMAKE_SOURCE_DIR})
-target_link_libraries(client PUBLIC ${RAKNET_LIBRARY})
-target_link_libraries(server PUBLIC ${RAKNET_LIBRARY})
+
+find_library(ODE_LIBRARY NAMES libode.a)
+find_library(DRAWSTFUF_LIBRARY NAMES libdrawstuff.a PATHS ${CMAKE_SOURCE_DIR})
+	
+find_package (Threads)
+find_package(OpenGL)
+find_package(X11)
+
+target_link_libraries(client PUBLIC ${RAKNET_LIBRARY} ${ODE_LIBRARY} ${DRAWSTFUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+target_link_libraries(server PUBLIC ${RAKNET_LIBRARY} ${ODE_LIBRARY} ${DRAWSTFUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
