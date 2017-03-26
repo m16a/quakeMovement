@@ -54,6 +54,8 @@ static dSpaceID space;
 static dJointID joint[NUMJ];
 static dJointGroupID contactgroup;
 
+static dGeomID  ground;
+
 static int num = 4;
 
 void drawGeom(dGeomID g, const dReal *pos, const dReal *R, int show_aabb)
@@ -108,17 +110,15 @@ void createTest()
 	obj[0].body = dBodyCreate(world);
 	dMassSetBoxTotal(&m, 1, 0.1, 0.1, 0.1);
 	obj[0].geom = dCreateBox(space,0.1,0.1,0.1);
-  dBodySetPosition(obj[0].body, 0, 0, 0);
+  dBodySetPosition(obj[0].body, 0, 0, 0.2);
 	dBodySetMass(obj[0].body, &m);
 
 	dVector3 impF;
-	dWorldImpulseToForce(world, kStepSize, 0.01, 0, 0, impF);
+	//dWorldImpulseToForce(world, kStepSize, 0.01, 0, 0, impF);
 	//dBodyAddForceAtPos(obj[0].body, impF[0], impF[1], impF[2], -0.05, 0.05, 0.5);
-	dQuaternion q = {0.853553, 0.353553, 0.353553, -0.146447};
-	dBodySetQuaternion(obj[0].body, q);
 
-	dBodySetLinearVel(obj[0].body, -0.3, 0, 0.3);
-	dBodySetAngularVel(obj[0].body, 0, 0, 2);
+	//dBodySetLinearVel(obj[0].body, -0.3, 0, 0.3);
+	//dBodySetAngularVel(obj[0].body, 0, 0, 2);
 	dGeomSetBody(obj[0].geom, obj[0].body);
 #endif
 
@@ -166,9 +166,6 @@ void createTest()
 
 }
 
-// this is called by dSpaceCollide when two objects in space are
-// potentially colliding.
-
 // start simulation - set viewpoint
 static void start()
 {
@@ -178,6 +175,9 @@ static void start()
   static float hpr[3] = {90.0f, 0.0f, 0.0f};
   dsSetViewpoint(xyz,hpr);
 }
+
+// this is called by dSpaceCollide when two objects in space are
+// potentially colliding.
 
 static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 {
@@ -209,10 +209,10 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
       //dIASSERT(!dIsNan(contact[i].geom.depth));
       contact[i].surface.slip1 = 0.7;
       contact[i].surface.slip2 = 0.7;
-      //contact[i].surface.mode = dContactSoftERP | dContactSoftCFM | dContactApprox1 | dContactSlip1 | dContactSlip2;
-      contact[i].surface.mode = dContactBounce;
-      contact[i].surface.bounce = 1;
-      contact[i].surface.mu = 0; // was: dInfinity
+      contact[i].surface.mode = dContactSoftERP | dContactSoftCFM | dContactApprox1 | dContactSlip1 | dContactSlip2;
+      //contact[i].surface.mode = dContactBounce;
+      contact[i].surface.bounce = 0.1;
+      contact[i].surface.mu = dInfinity;
       contact[i].surface.soft_erp = 0.96;
       contact[i].surface.soft_cfm = 0.04;
       dJointID c = dJointCreateContact (world,contactgroup,&contact[i]);
@@ -356,6 +356,9 @@ int main (int argc, char **argv)
   dRandSetSeed (time(0));
   createTest();
 
+  dWorldSetGravity (world,0,0,-0.8);
+
+  ground = dCreatePlane (space,0,0,1,0);
   // run simulation
   dsSimulationLoop (argc,argv,352,288,&fn);
 
