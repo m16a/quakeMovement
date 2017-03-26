@@ -242,7 +242,7 @@ static void simLoop (int pause)
 		const dReal* w = dBodyGetAngularVel(obj[0].body);
 		const dReal* v = dBodyGetLinearVel(obj[0].body);
 	
-		fprintf(stdout, "[%d]sT=%.3f pos(%.3f %.3f %.3f) vel:(%.3f %.3f %.3f)  rot(%.3f %.3f %.3f %.3f) w(%.3f %.3f %.3f)\n",frameNum, simTime, pos[0], pos[1], pos[2], v[0], v[1], v[2], rot[0], rot[1], rot[2], rot[3], w[0], w[1], w[2]);
+		//fprintf(stdout, "[%d]sT=%.3f pos(%.3f %.3f %.3f) vel:(%.3f %.3f %.3f)  rot(%.3f %.3f %.3f %.3f) w(%.3f %.3f %.3f)\n",frameNum, simTime, pos[0], pos[1], pos[2], v[0], v[1], v[2], rot[0], rot[1], rot[2], rot[3], w[0], w[1], w[2]);
 		frameNum++;
 	dMass tmp;
 	dBodyGetMass (obj[0].body, &tmp);
@@ -329,6 +329,38 @@ static void simLoop (int pause)
 
 }
 
+char locase (char c)
+{
+    if (c >= 'A' && c <= 'Z') return c - ('a'-'A');
+    else return c;
+}
+
+static void command (int cmd)
+{
+	cmd = locase(cmd);
+	switch (cmd)
+	{
+		case 'w':
+			dBodySetLinearVel(obj[0].body, -0.3, 0, 0);
+			break;
+		case 's':
+			dBodySetLinearVel(obj[0].body, 0.3, 0, 0);
+			break;
+		case 'a':
+			dBodySetLinearVel(obj[0].body, 0, -0.3, 0);
+			break;
+		case 'd':
+			dBodySetLinearVel(obj[0].body, 0, 0.3, 0);
+			break;
+		case 32://space
+			dBodySetLinearVel(obj[0].body, 0, 0, 1);
+			break;
+		default:
+			std::cout << cmd;
+			break;
+	}
+}
+
 int main (int argc, char **argv)
 {
 	std::cout << "Client\n";
@@ -348,7 +380,7 @@ int main (int argc, char **argv)
   fn.version = DS_VERSION;
   fn.start = &start;
   fn.step = &simLoop;
-  fn.command = 0;
+  fn.command = &command;
   fn.stop = 0;
   fn.path_to_textures = DRAWSTUFF_TEXTURE_PATH;
 
