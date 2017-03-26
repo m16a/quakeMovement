@@ -137,7 +137,6 @@ void createTest()
 	dQuaternion q = {0.853553, 0.353553, 0.353553, -0.146447};
 	//dBodySetQuaternion(obj[0].body, q);
 
-	dBodySetLinearVel(obj[0].body, -0.3, 0, 0);
 	//dBodySetAngularVel(obj[0].body, 0, 0, 3);
 	dGeomSetBody(obj[0].geom, obj[0].body);
 	//test box 2
@@ -171,9 +170,11 @@ static void start()
 {
   dAllocateODEDataForThread(dAllocateMaskAll);
 
-  static float xyz[3] = {0.0f, -2.0f, 1.0f};
-  static float hpr[3] = {90.0f, 0.0f, 0.0f};
-  dsSetViewpoint(xyz,hpr);
+	//const dReal* pos = dBodyGetPosition(obj[0].body);
+  //static float xyz[3] = {0.0f, -2.0f, 1.0f};
+  //static float xyz[3] = {pos[0], pos[1], pos[2]};
+  //static float hpr[3] = {90.0f, 0.0f, 0.0f};
+  //dsSetViewpoint(xyz,hpr);
 }
 
 // this is called by dSpaceCollide when two objects in space are
@@ -266,6 +267,12 @@ static void simLoop (int pause)
 					}
 					drawGeom(obj[i].geom,0,0,0);
 	}
+
+	const dReal* pos = dBodyGetPosition(obj[0].body);
+  //static float xyz[3] = {0.0f, -2.0f, 1.0f};
+  float xyz[3] = {pos[0], pos[1], pos[2]+0.1};
+  static float hpr[3] = {90.0f, 0.0f, 0.0f};
+  dsSetViewpoint(xyz,hpr);
 
 	// NETWORK STAF
 
