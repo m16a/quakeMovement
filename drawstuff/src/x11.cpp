@@ -215,18 +215,30 @@ static void handleEvent (XEvent &event, dsFunctions *fn)
   return;
 
   case MotionNotify: {
+    Window root,child;
     if (event.xmotion.is_hint) {
-      Window root,child;
       unsigned int mask;
       XQueryPointer (display,win,&root,&child,&event.xbutton.x_root,
 		     &event.xbutton.y_root,&event.xbutton.x,&event.xbutton.y,
 		     &mask);
     }
-    //dsMotion (mode, event.xmotion.x - mx, event.xmotion.y - my);
-		if (fn->mouseMove)
-			fn->mouseMove(event.xmotion.x - mx, event.xmotion.y - my);
-    mx = event.xmotion.x;
-    my = event.xmotion.y;
+		
+		static bool warpPointer = false;
+		if (!warpPointer)
+		{
+			//dsMotion (mode, event.xmotion.x - mx, event.xmotion.y - my);
+			if (fn->mouseMove)
+				fn->mouseMove(event.xmotion.x - mx, event.xmotion.y - my);
+
+			warpPointer = true;
+			XWarpPointer(display, None, win, 0,0,0,0,400,300);
+		}
+		else
+			warpPointer = false;
+
+		mx = event.xmotion.x;
+		my = event.xmotion.y;
+		
   }
   return;
 

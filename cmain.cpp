@@ -298,7 +298,7 @@ static void simLoop (int pause)
 		vec[1] -= 1;
 
 	float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
-	std::cout << "dir2d:"<< dir2d[0] << "-" << dir2d[1] << "\n";
+	//std::cout << "dir2d:"<< dir2d[0] << "-" << dir2d[1] << "\n";
 	if (vec[0] || vec[1])
 	{
 		//std::cout << "move:"<< vec[0] << "-" << vec[1] << "\n";
@@ -435,7 +435,7 @@ static void command (int cmd)
 void mouseMove(int dx, int dy)
 {
 	//std::cout << "rot" << dx << " " << dy << "\n";
-	const float speed = 0.5f;
+	const float speed = 0.8f;
 	if (dx < 0)
 		gViewRot[0] += speed;
 	else if (dx > 0) 
