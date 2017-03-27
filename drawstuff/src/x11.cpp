@@ -147,8 +147,8 @@ static void createMainWindow (int _width, int _height)
   attributes.background_pixel = BlackPixel(display,screen);
   attributes.colormap = colormap;
   attributes.event_mask = ButtonPressMask | ButtonReleaseMask |
-    KeyPressMask | KeyReleaseMask | ButtonMotionMask | PointerMotionHintMask |
-    StructureNotifyMask;
+    KeyPressMask | KeyReleaseMask | /*ButtonMotionMask |*/ PointerMotionHintMask |
+    StructureNotifyMask | PointerMotionMask;
   win = XCreateWindow (display,RootWindow(display,screen),50,50,width,height,
 		       0,visual->depth, InputOutput,visual->visual,
 		       CWBackPixel | CWColormap | CWEventMask,&attributes);
@@ -222,7 +222,9 @@ static void handleEvent (XEvent &event, dsFunctions *fn)
 		     &event.xbutton.y_root,&event.xbutton.x,&event.xbutton.y,
 		     &mask);
     }
-    dsMotion (mode, event.xmotion.x - mx, event.xmotion.y - my);
+    //dsMotion (mode, event.xmotion.x - mx, event.xmotion.y - my);
+		if (fn->mouseMove)
+			fn->mouseMove(event.xmotion.x - mx, event.xmotion.y - my);
     mx = event.xmotion.x;
     my = event.xmotion.y;
   }
@@ -270,7 +272,9 @@ static void handleEvent (XEvent &event, dsFunctions *fn)
   return;
 
   case KeyRelease: {
-    // hmmmm...
+    KeySym key;
+    XLookupString (&event.xkey,NULL,0,&key,0);
+		if (fn->commandRelease) fn->commandRelease(key);
   }
   return;
 

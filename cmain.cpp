@@ -58,6 +58,19 @@ static dGeomID  ground;
 
 static int num = 4;
 
+
+static float gViewRot[3] = {0.0f, 0.0f, 0.0f};
+
+enum 
+{
+	eMoveFrwd = 1,
+	eMoveBck = 1 << 1,
+	eMoveLeft = 1 << 2,
+	eMoveRight = 1 << 3
+};
+
+static int gMoveFlags = 0;
+
 void drawGeom(dGeomID g, const dReal *pos, const dReal *R, int show_aabb)
 {
     int i;
@@ -271,9 +284,35 @@ static void simLoop (int pause)
 	const dReal* pos = dBodyGetPosition(obj[0].body);
   //static float xyz[3] = {0.0f, -2.0f, 1.0f};
   float xyz[3] = {pos[0], pos[1], pos[2]+0.1};
-  static float hpr[3] = {90.0f, 0.0f, 0.0f};
-  dsSetViewpoint(xyz,hpr);
+  dsSetViewpoint(xyz,gViewRot);
 
+	//movement
+	int vec[2] = {0,0};
+	if (gMoveFlags & eMoveFrwd)
+		vec[0] += 1;
+	if (gMoveFlags & eMoveBck)
+		vec[0] -= 1;
+
+	if (gMoveFlags & eMoveRight)
+		vec[1] += 1;
+	if (gMoveFlags & eMoveLeft)
+		vec[1] -= 1;
+
+	if (vec[0] || vec[1])
+	{
+		//std::cout << "move:"<< vec[0] << "-" << vec[1] << "\n";
+		float dir2d[2] = {sin(gViewRot[0] / 180.0f * M_PI), cos(gViewRot[0] / 180.0f * M_PI)};
+		std::cout << "move:"<< dir2d[0] << "-" << dir2d[1] << "\n";
+		float res[2] = {vec[0] * dir2d[0] + vec[1] * dir2d[0], vec[0] * dir2d[1] - vec[1] * dir2d[1]};
+		
+		float res_norm = sqrt(res[0]*res[0] + res[1]*res[1]);
+
+		res[0] /= res_norm;
+		res[1] /= res_norm;
+
+		float speed = 0.3;
+		dBodySetLinearVel(obj[0].body, speed * res[0], speed * res[1], 0);
+	}
 	// NETWORK STAF
 
 	{
@@ -342,6 +381,35 @@ char locase (char c)
     else return c;
 }
 
+static void commandRelease(int cmd)
+{
+	cmd = locase(cmd);
+	switch (cmd)
+	{
+		case 'w':
+			dBodySetLinearVel(obj[0].body, -0.3, 0, 0);
+			gMoveFlags &= ~eMoveFrwd; 
+			break;
+		case 's':
+			dBodySetLinearVel(obj[0].body, 0.3, 0, 0);
+			gMoveFlags &= ~eMoveBck; 
+			break;
+		case 'a':
+			dBodySetLinearVel(obj[0].body, 0, -0.3, 0);
+			gMoveFlags &= ~eMoveLeft; 
+			break;
+		case 'd':
+			dBodySetLinearVel(obj[0].body, 0, 0.3, 0);
+			gMoveFlags &= ~eMoveRight; 
+			break;
+		case 32://space
+			break;
+		default:
+			std::cout << cmd;
+			break;
+	}
+}
+
 static void command (int cmd)
 {
 	cmd = locase(cmd);
@@ -349,15 +417,19 @@ static void command (int cmd)
 	{
 		case 'w':
 			dBodySetLinearVel(obj[0].body, -0.3, 0, 0);
+			gMoveFlags |= eMoveFrwd; 
 			break;
 		case 's':
 			dBodySetLinearVel(obj[0].body, 0.3, 0, 0);
+			gMoveFlags |= eMoveBck; 
 			break;
 		case 'a':
 			dBodySetLinearVel(obj[0].body, 0, -0.3, 0);
+			gMoveFlags |= eMoveLeft; 
 			break;
 		case 'd':
 			dBodySetLinearVel(obj[0].body, 0, 0.3, 0);
+			gMoveFlags |= eMoveRight; 
 			break;
 		case 32://space
 			dBodySetLinearVel(obj[0].body, 0, 0, 1);
@@ -366,6 +438,27 @@ static void command (int cmd)
 			std::cout << cmd;
 			break;
 	}
+}
+
+void mouseMove(int dx, int dy)
+{
+	//std::cout << "rot" << dx << " " << dy << "\n";
+	const float speed = 0.5f;
+	if (dx < 0)
+		gViewRot[0] += speed;
+	else if (dx > 0) 
+		gViewRot[0] -= speed;
+
+	if (dy < 0)
+		gViewRot[1] += speed;
+	else if (dy > 0) 
+		gViewRot[1] -= speed;
+
+	if (gViewRot[1] > 89.0)
+		gViewRot[1] = 89.0;
+	else if (gViewRot[1] < -89.0)
+		gViewRot[1] = -89.0;
+
 }
 
 int main (int argc, char **argv)
@@ -388,6 +481,9 @@ int main (int argc, char **argv)
   fn.start = &start;
   fn.step = &simLoop;
   fn.command = &command;
+  fn.commandRelease = &commandRelease;
+  fn.mouseMove= &mouseMove;
+	
   fn.stop = 0;
   fn.path_to_textures = DRAWSTUFF_TEXTURE_PATH;
 

@@ -88,6 +88,8 @@ typedef struct dsFunctions {
   void (*start)();		/* called before sim loop starts */
   void (*step) (int pause);	/* called before every frame */
   void (*command) (int cmd);	/* called if a command key is pressed */
+  void (*commandRelease) (int cmd);	/* called if a command key is released*/
+  void (*mouseMove) (int dx, int dy);	/* called if mouse is moved */
   void (*stop)();		/* called after sim loop exits */
   /* version 2 data */
   const char *path_to_textures;	/* if nonzero, path to texture files */
