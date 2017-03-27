@@ -106,8 +106,8 @@ void drawGeom(dGeomID g, const dReal *pos, const dReal *R, int show_aabb)
         dsDrawBox(bbpos,RI,bbsides);
     }
 }
-// create the test system
 
+// create the test system
 void createTest()
 {
   dMass m;
@@ -192,7 +192,6 @@ static void start()
 
 // this is called by dSpaceCollide when two objects in space are
 // potentially colliding.
-
 static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 {
   assert(o1);
@@ -298,19 +297,20 @@ static void simLoop (int pause)
 	if (gMoveFlags & eMoveLeft)
 		vec[1] -= 1;
 
+	float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
+	std::cout << "dir2d:"<< dir2d[0] << "-" << dir2d[1] << "\n";
 	if (vec[0] || vec[1])
 	{
 		//std::cout << "move:"<< vec[0] << "-" << vec[1] << "\n";
-		float dir2d[2] = {sin(gViewRot[0] / 180.0f * M_PI), cos(gViewRot[0] / 180.0f * M_PI)};
-		std::cout << "move:"<< dir2d[0] << "-" << dir2d[1] << "\n";
-		float res[2] = {vec[0] * dir2d[0] + vec[1] * dir2d[0], vec[0] * dir2d[1] - vec[1] * dir2d[1]};
+		// dir2d.cross(0,0,1)
+		float res[2] = {vec[0] * dir2d[0] + vec[1] * dir2d[1], vec[0] * dir2d[1] - vec[1] * dir2d[0]};
 		
 		float res_norm = sqrt(res[0]*res[0] + res[1]*res[1]);
 
 		res[0] /= res_norm;
 		res[1] /= res_norm;
 
-		float speed = 0.3;
+		float speed = 1;
 		dBodySetLinearVel(obj[0].body, speed * res[0], speed * res[1], 0);
 	}
 	// NETWORK STAF
@@ -323,7 +323,7 @@ static void simLoop (int pause)
 		gLastSentTime = currT;
 		Msg m;
 		FillMsg(m);
-		Dump(m);
+		//Dump(m);
 
 #if USE_BIT_STREAM 
 		RakNet::BitStream myBitStream;
@@ -339,13 +339,13 @@ static void simLoop (int pause)
 		gPeer->Send(reinterpret_cast<char*>(&m), sizeof(Msg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 #endif
 
-		std::cout << "sent t:" << currT << "\n";
+		//std::cout << "sent t:" << currT << "\n";
 		
 
 		RakNet::Packet *packet;
 		for (packet=gPeer->Receive(); packet; gPeer->DeallocatePacket(packet), packet=gPeer->Receive())
 		{
-			std::cout << "reading\t";
+			//std::cout << "reading\t";
 			unsigned char type = GetPacketIdentifier(packet);
 			switch (type)
 			{
@@ -354,7 +354,7 @@ static void simLoop (int pause)
 						Msg* m = reinterpret_cast<Msg*>(packet->data);
 						assert(packet->length == sizeof(Msg));
 
-						Dump(*m);
+						//Dump(*m);
 						break;
 					}
 				case ID_CONNECTION_REQUEST_ACCEPTED:
@@ -387,19 +387,15 @@ static void commandRelease(int cmd)
 	switch (cmd)
 	{
 		case 'w':
-			dBodySetLinearVel(obj[0].body, -0.3, 0, 0);
 			gMoveFlags &= ~eMoveFrwd; 
 			break;
 		case 's':
-			dBodySetLinearVel(obj[0].body, 0.3, 0, 0);
 			gMoveFlags &= ~eMoveBck; 
 			break;
 		case 'a':
-			dBodySetLinearVel(obj[0].body, 0, -0.3, 0);
 			gMoveFlags &= ~eMoveLeft; 
 			break;
 		case 'd':
-			dBodySetLinearVel(obj[0].body, 0, 0.3, 0);
 			gMoveFlags &= ~eMoveRight; 
 			break;
 		case 32://space
@@ -416,19 +412,15 @@ static void command (int cmd)
 	switch (cmd)
 	{
 		case 'w':
-			dBodySetLinearVel(obj[0].body, -0.3, 0, 0);
 			gMoveFlags |= eMoveFrwd; 
 			break;
 		case 's':
-			dBodySetLinearVel(obj[0].body, 0.3, 0, 0);
 			gMoveFlags |= eMoveBck; 
 			break;
 		case 'a':
-			dBodySetLinearVel(obj[0].body, 0, -0.3, 0);
 			gMoveFlags |= eMoveLeft; 
 			break;
 		case 'd':
-			dBodySetLinearVel(obj[0].body, 0, 0.3, 0);
 			gMoveFlags |= eMoveRight; 
 			break;
 		case 32://space
@@ -458,7 +450,6 @@ void mouseMove(int dx, int dy)
 		gViewRot[1] = 89.0;
 	else if (gViewRot[1] < -89.0)
 		gViewRot[1] = -89.0;
-
 }
 
 int main (int argc, char **argv)
@@ -495,7 +486,7 @@ int main (int argc, char **argv)
 
   ground = dCreatePlane (space,0,0,1,0);
   // run simulation
-  dsSimulationLoop (argc,argv,352,288,&fn);
+  dsSimulationLoop (argc,argv,800,600,&fn);
 
 
 	gLastSentTime = GetCurrTime();
