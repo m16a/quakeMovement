@@ -121,7 +121,7 @@ void createTest()
 #if 1
 	//test box
 	obj[0].body = dBodyCreate(world);
-	dMassSetBoxTotal(&m, 1, 0.1, 0.1, 0.1);
+	dMassSetBoxTotal(&m, 1, 10000000, 10000000, 10000000);//disable rotation
 	obj[0].geom = dCreateBox(space,0.1,0.1,0.1);
   dBodySetPosition(obj[0].body, 0, 0, 0.2);
 	dBodySetMass(obj[0].body, &m);
@@ -282,8 +282,6 @@ static void simLoop (int pause)
 
 	const dReal* pos = dBodyGetPosition(obj[0].body);
   //static float xyz[3] = {0.0f, -2.0f, 1.0f};
-  float xyz[3] = {pos[0], pos[1], pos[2]+0.1};
-  dsSetViewpoint(xyz,gViewRot);
 
 	//movement
 	int vec[2] = {0,0};
@@ -313,6 +311,11 @@ static void simLoop (int pause)
 		float speed = 1;
 		dBodySetLinearVel(obj[0].body, speed * res[0], speed * res[1], 0);
 	}
+
+	float offset = 0.5;
+  float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.1};
+  dsSetViewpoint(xyz,gViewRot);
+
 	// NETWORK STAF
 
 	{
