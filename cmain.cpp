@@ -62,6 +62,11 @@ static int num = 4;
 static float gViewRot[3] = {0.0f, 0.0f, 0.0f};
 static bool gFlying = true;
 
+int gCmdIndex = 0;
+#define MAX_COMMANDS 64
+#define CMD_MASK (MAX_COMMANDS -1)
+usrcmd commands[MAX_COMMANDS];
+
 enum 
 {
 	eMoveFrwd = 1,
@@ -143,37 +148,6 @@ void createTest()
 #endif
 
 
-#if 0
-	//test box
-	obj[0].body = dBodyCreate(world);
-	dMassSetBoxTotal(&m, 1, 0.1, 0.1, 0.1);
-	obj[0].geom = dCreateBox(space,0.1,0.1,0.1);
-  dBodySetPosition(obj[0].body, 0.5, 0.05, 1.05);
-	dBodySetMass(obj[0].body, &m);
-
-	dVector3 impF;
-	dWorldImpulseToForce(world, kStepSize, 0.01, 0, 0, impF);
-	//dBodyAddForceAtPos(obj[0].body, impF[0], impF[1], impF[2], -0.05, 0.05, 0.5);
-	dQuaternion q = {0.853553, 0.353553, 0.353553, -0.146447};
-	//dBodySetQuaternion(obj[0].body, q);
-
-	//dBodySetAngularVel(obj[0].body, 0, 0, 3);
-	dGeomSetBody(obj[0].geom, obj[0].body);
-	//test box 2
-	obj[3].body = dBodyCreate(world);
-	dMassSetBoxTotal(&m, 1, 0.1, 0.1, 0.1);
-	obj[3].geom = dCreateBox(space,0.1,0.1,0.1);
-  dBodySetPosition(obj[3].body, -0.5, 0, 1);
-	dBodySetMass(obj[3].body, &m);
-
-	//dBodyAddForceAtPos(obj[0].body, impF[0], impF[1], impF[2], -0.05, 0.05, 0.5);
-	//dQuaternion q = {0.853553, 0.353553, 0.353553, -0.146447};
-	//dBodySetQuaternion(obj[3].body, q);
-
-	dBodySetLinearVel(obj[3].body, 0.3, 0, 0);
-	//dBodySetAngularVel(obj[3].body, 0, 0, 3);
-	dGeomSetBody(obj[3].geom, obj[3].body);
-#endif
 	//test wall
 	obj[2].geom = dCreateBox(space, 0.1, 1, 1);
   dGeomSetPosition(obj[2].geom, -1, 0, 1);
@@ -189,12 +163,6 @@ void createTest()
 static void start()
 {
   dAllocateODEDataForThread(dAllocateMaskAll);
-
-	//const dReal* pos = dBodyGetPosition(obj[0].body);
-  //static float xyz[3] = {0.0f, -2.0f, 1.0f};
-  //static float xyz[3] = {pos[0], pos[1], pos[2]};
-  //static float hpr[3] = {90.0f, 0.0f, 0.0f};
-  //dsSetViewpoint(xyz,hpr);
 }
 
 // this is called by dSpaceCollide when two objects in space are
@@ -234,14 +202,9 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 			
     for (int i=0; i<n; i++) 
     {
-	  // Paranoia  <-- not working for some people, temporarily removed for 0.6
-      //dIASSERT(dVALIDVEC3(contact[i].geom.pos));
-      //dIASSERT(dVALIDVEC3(contact[i].geom.normal));
-      //dIASSERT(!dIsNan(contact[i].geom.depth));
       contact[i].surface.slip1 = 0.7;
       contact[i].surface.slip2 = 0.7;
       contact[i].surface.mode = dContactSoftERP | dContactSoftCFM | dContactApprox1 | dContactSlip1 | dContactSlip2;
-      //contact[i].surface.mode = dContactBounce;
       contact[i].surface.bounce = 0.1;
       contact[i].surface.mu = dInfinity;
       contact[i].surface.soft_erp = 0.96;
@@ -331,15 +294,20 @@ static void simLoop (int pause)
 		if (!gFlying)
 		{
 			const dReal* v = dBodyGetLinearVel(obj[0].body);
-			dBodySetLinearVel(obj[0].body, speed * res[0], speed * res[1], v[2]);
+			//dBodySetLinearVel(obj[0].body, speed * res[0], speed * res[1], v[2]);
+
+			usrcmd& c = commands[(++gCmdIndex) & CMD_MASK];
+			c.serverTime = RakNet::GetTime();
+			c.forward = static_cast<signed char>(speed * res[0] * 100.0f);
+			c.right = static_cast<signed char>(speed * res[1] * 100.0f);
 		}
 	}
 
-	float offset = 0.5;
+	float offset = 0.0;
   float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.1};
   dsSetViewpoint(xyz,gViewRot);
 
-	std::cout << "f:" << gFlying << "\n";
+	//std::cout << "f:" << gFlying << "\n";
 	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
 
 	// NETWORK STAF
@@ -352,6 +320,10 @@ static void simLoop (int pause)
 		gLastSentTime = currT;
 		Msg m;
 		FillMsg(m);
+		m.forward = commands[gCmdIndex & CMD_MASK].forward;
+		m.right = commands[gCmdIndex & CMD_MASK].right;
+		m.timeStamp = commands[gCmdIndex & CMD_MASK].serverTime;
+
 		//Dump(m);
 
 #if USE_BIT_STREAM 

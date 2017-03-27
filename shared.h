@@ -15,5 +15,17 @@ extern const char* kHost;
 float GetCurrTime();
 unsigned char GetPacketIdentifier(RakNet::Packet *p);
 
+struct usrcmd
+{
+	RakNet::Time serverTime;
+	signed char forward, right, jump;
+};
+
+struct pstate
+{
+	usrcmd cmd;
+	float vec[3];
+};
+
 #endif //_SHARED_H_
 

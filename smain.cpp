@@ -56,7 +56,7 @@ int main()
 						m->timeStamp += peer->GetClockDifferential(packet);
 						Dump(*m);
 #endif
-						std::cout << "my_msg:" << packet->length << ":" << sizeof(Msg) << "\n";
+						//std::cout << "my_msg:" << packet->length << ":" << sizeof(Msg) << "\n";
 
 						break;
 					}

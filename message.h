@@ -4,6 +4,7 @@
 #include "raknet/RakNetTypes.h"
 #include "raknet/MessageIdentifiers.h"
 #include "raknet/BitStream.h"
+#include "raknet/GetTime.h"
 
 enum 
 {
@@ -16,7 +17,8 @@ struct Msg
 	unsigned char useTimeStamp; // Assign ID_TIMESTAMP to this
 	RakNet::Time timeStamp; // Put the system time in here returned by RakNet::GetTime()
 	unsigned char typeId; // You should put here an enum you defined after the last one defined in MessageIdentifiers.h, lets say ID_SET_TIMED_MINE
-	float x,y,z;
+	signed char forward, right, up;
+
 	//RakNet::NetworkID networkId; // NetworkID of the mine, used as a common method to refer to the mine on different computers
 	//RakNet::SystemAddress systemAddress; // The SystenAddress of the player that owns the mine
 };
