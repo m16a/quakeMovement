@@ -30,7 +30,7 @@
 
 #define NUM 10			// number of bodies
 #define NUMJ 9			// number of joints
-#define SIDE (0.2)		// side length of a box
+#define SIDE (0.1)		// side length of a box
 #define MASS (1.0)		// mass of a box
 #define RADIUS (0.1732f)	// sphere radius
 #define DENSITY (5.0)		// density of all objects
@@ -60,6 +60,7 @@ static int num = 4;
 
 
 static float gViewRot[3] = {0.0f, 0.0f, 0.0f};
+static bool gFlying = true;
 
 enum 
 {
@@ -122,7 +123,7 @@ void createTest()
 	//test box
 	obj[0].body = dBodyCreate(world);
 	dMassSetBoxTotal(&m, 1, 10000000, 10000000, 10000000);//disable rotation
-	obj[0].geom = dCreateBox(space,0.1,0.1,0.1);
+	obj[0].geom = dCreateBox(space, SIDE, SIDE, SIDE);
   dBodySetPosition(obj[0].body, 0, 0, 0.2);
 	dBodySetMass(obj[0].body, &m);
 
@@ -133,6 +134,12 @@ void createTest()
 	//dBodySetLinearVel(obj[0].body, -0.3, 0, 0.3);
 	//dBodySetAngularVel(obj[0].body, 0, 0, 2);
 	dGeomSetBody(obj[0].geom, obj[0].body);
+
+	obj[1].geom = dCreateRay(space, SIDE / 2.0f + 0.01);
+	dGeomRaySet(obj[1].geom, 0,0,0.2, 0,0,-SIDE/2.0f - 0.001);
+
+	//ground contact check ray
+
 #endif
 
 
@@ -168,12 +175,12 @@ void createTest()
 	dGeomSetBody(obj[3].geom, obj[3].body);
 #endif
 	//test wall
-	obj[1].geom = dCreateBox(space, 0.1, 1, 1);
-  dGeomSetPosition(obj[1].geom, -1, 0, 1);
+	obj[2].geom = dCreateBox(space, 0.1, 1, 1);
+  dGeomSetPosition(obj[2].geom, -1, 0, 1);
 
 	//test wall
-	obj[2].geom = dCreateBox(space, 0.1,1, 1);
-  dGeomSetPosition(obj[2].geom, 1, 0, 1);
+	obj[3].geom = dCreateBox(space, 0.1,1, 1);
+  dGeomSetPosition(obj[3].geom, 1, 0, 1);
 
 
 }
@@ -209,11 +216,22 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 
 //  fprintf(stderr,"testing geoms %p %p\n", o1, o2);
 
+	//skip collsion btw main box and ground ray
+	if (o1 == obj[0].geom && o2 == obj[1].geom ||
+		o1 == obj[1].geom && o2 == obj[0].geom	)
+		return;
+
   const int N = 32;
   dContact contact[N];
   int n = dCollide (o1,o2,N,&(contact[0].geom),sizeof(dContact));
   if (n > 0) 
   {
+		if (o1 == obj[1].geom || o2 == obj[1].geom) 
+		{
+			gFlying = false;
+			return;
+		}
+			
     for (int i=0; i<n; i++) 
     {
 	  // Paranoia  <-- not working for some people, temporarily removed for 0.6
@@ -239,6 +257,7 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 static void simLoop (int pause)
 {
   double dt = dsElapsedTime();
+	gFlying = true;
 
   int nrofsteps = (int) ceilf(dt/kStepSize);
 	
@@ -282,8 +301,8 @@ static void simLoop (int pause)
 
 	const dReal* pos = dBodyGetPosition(obj[0].body);
   //static float xyz[3] = {0.0f, -2.0f, 1.0f};
-
 	//movement
+
 	int vec[2] = {0,0};
 	if (gMoveFlags & eMoveFrwd)
 		vec[0] += 1;
@@ -309,12 +328,19 @@ static void simLoop (int pause)
 		res[1] /= res_norm;
 
 		float speed = 1;
-		dBodySetLinearVel(obj[0].body, speed * res[0], speed * res[1], 0);
+		if (!gFlying)
+		{
+			const dReal* v = dBodyGetLinearVel(obj[0].body);
+			dBodySetLinearVel(obj[0].body, speed * res[0], speed * res[1], v[2]);
+		}
 	}
 
 	float offset = 0.5;
   float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.1};
   dsSetViewpoint(xyz,gViewRot);
+
+	std::cout << "f:" << gFlying << "\n";
+	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
 
 	// NETWORK STAF
 
@@ -427,7 +453,11 @@ static void command (int cmd)
 			gMoveFlags |= eMoveRight; 
 			break;
 		case 32://space
-			dBodySetLinearVel(obj[0].body, 0, 0, 1);
+			if (!gFlying)
+			{
+				const dReal* v = dBodyGetLinearVel(obj[0].body);
+				dBodySetLinearVel(obj[0].body, v[0], v[1], v[2] + 1);
+			}
 			break;
 		default:
 			std::cout << cmd;
