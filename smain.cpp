@@ -3,42 +3,249 @@
 #include "raknet/RakNetTypes.h"
 #include "raknet/MessageIdentifiers.h"
 
+#include <ode/ode.h>
+#include <drawstuff/drawstuff.h>
+
 #include "shared.h"
+
+#ifndef DRAWSTUFF_TEXTURE_PATH
+#define DRAWSTUFF_TEXTURE_PATH "textures"
+#endif
+
+// some constants
+
+#define NUM 10			// number of bodies
+#define NUMJ 9			// number of joints
+#define SIDE (0.1)		// side length of a box
+#define MASS (1.0)		// mass of a box
+#define RADIUS (0.1732f)	// sphere radius
+#define DENSITY (5.0)		// density of all objects
 
 const int kMaxConnectionsAllowed = 2;
 const int kMaxPlayersPerServer = 2;
 
+RakNet::RakPeerInterface* gPeer = 0;
 
-int main()
+pstate gServerPState;
+
+static bool gFlying = true;
+
+struct MyObject {
+  dBodyID body;			// the body
+  dGeomID geom;		// geometry representing this body
+};
+
+static MyObject obj[NUM];
+
+static dWorldID world=0;
+static dSpaceID space;
+static dJointID joint[NUMJ];
+static dJointGroupID contactgroup;
+
+static dGeomID  ground;
+
+static int num = 4;
+
+static float gViewRot[3] = {0.0f, 0.0f, 0.0f};
+
+void drawGeom(dGeomID g, const dReal *pos, const dReal *R, int show_aabb)
 {
-	std::cout << "Server\n";
+    int i;
+	
+    if (!g)
+        return;
+    if (!pos)
+        pos = dGeomGetPosition(g);
+    if (!R)
+        R = dGeomGetRotation(g);
 
-	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
-	assert(peer);
+    int type = dGeomGetClass(g);
+    if (type == dBoxClass) {
 
-	peer->SetOccasionalPing(true);
+        dVector3 sides;
+        dGeomBoxGetLengths (g,sides);
+        dsDrawBox(pos,R,sides);
+    }
 
-	RakNet::SocketDescriptor* p_SD = new RakNet::SocketDescriptor(kServerPort,0);
-	peer->Startup(kMaxConnectionsAllowed, p_SD, 1);
-	peer->SetMaximumIncomingConnections(kMaxPlayersPerServer);
+    if (show_aabb) {
+        // draw the bounding box for this geom
+        dReal aabb[6];
+        dGeomGetAABB(g,aabb);
+        dVector3 bbpos;
+        for (i=0; i<3; i++)
+            bbpos[i] = 0.5*(aabb[i*2] + aabb[i*2+1]);
+        dVector3 bbsides;
+        for (i=0; i<3; i++)
+            bbsides[i] = aabb[i*2+1] - aabb[i*2];
+        dMatrix3 RI;
+        dRSetIdentity (RI);
+        dsSetColorAlpha(1,0,0,0.5);
+        dsDrawBox(bbpos,RI,bbsides);
+    }
+}
 
-	float lastSentTime = GetCurrTime();
-	while (true)
+// create the test system
+void createTest()
+{
+  dMass m;
+  int i,j;
+  if (world) dWorldDestroy (world);
+
+  space = dHashSpaceCreate(0);
+  world = dWorldCreate();
+  contactgroup = dJointGroupCreate(0);
+
+#if 1
+	//test box
+	obj[0].body = dBodyCreate(world);
+	dMassSetBoxTotal(&m, 1, 10000000, 10000000, 10000000);//disable rotation
+	obj[0].geom = dCreateBox(space, SIDE, SIDE, SIDE);
+  dBodySetPosition(obj[0].body, 0, 0, 0.2);
+	dBodySetMass(obj[0].body, &m);
+
+	dGeomSetBody(obj[0].geom, obj[0].body);
+
+	//ground contact check ray
+	obj[1].geom = dCreateRay(space, SIDE / 2.0f + 0.01);
+	dGeomRaySet(obj[1].geom, 0,0,0.2, 0,0,-SIDE/2.0f - 0.001);
+
+#endif
+
+
+	//test wall
+	obj[2].geom = dCreateBox(space, 0.1, 1, 1);
+  dGeomSetPosition(obj[2].geom, -1, 0, 1);
+
+	//test wall
+	obj[3].geom = dCreateBox(space, 0.1,1, 1);
+  dGeomSetPosition(obj[3].geom, 1, 0, 1);
+}
+
+// start simulation - set viewpoint
+static void start()
+{
+  dAllocateODEDataForThread(dAllocateMaskAll);
+}
+
+// this is called by dSpaceCollide when two objects in space are
+// potentially colliding.
+static void nearCallback (void *data, dGeomID o1, dGeomID o2)
+{
+  assert(o1);
+  assert(o2);
+
+  if (dGeomIsSpace(o1) || dGeomIsSpace(o2))
+  {
+      fprintf(stderr,"testing space %p %p\n", (void*)o1, (void*)o2);
+    // colliding a space with something
+    dSpaceCollide2(o1,o2,data,&nearCallback);
+    // Note we do not want to test intersections within a space,
+    // only between spaces.
+    return;
+  }
+
+//  fprintf(stderr,"testing geoms %p %p\n", o1, o2);
+
+	//skip collsion btw main box and ground ray
+	if (o1 == obj[0].geom && o2 == obj[1].geom ||
+		o1 == obj[1].geom && o2 == obj[0].geom	)
+		return;
+
+  const int N = 32;
+  dContact contact[N];
+  int n = dCollide (o1,o2,N,&(contact[0].geom),sizeof(dContact));
+  if (n > 0) 
+  {
+		if (o1 == obj[1].geom || o2 == obj[1].geom) 
+		{
+			gFlying = false;
+			return;
+		}
+			
+    for (int i=0; i<n; i++) 
+    {
+      contact[i].surface.slip1 = 0.7;
+      contact[i].surface.slip2 = 0.7;
+      contact[i].surface.mode = dContactSoftERP | dContactSoftCFM | dContactApprox1 | dContactSlip1 | dContactSlip2;
+      contact[i].surface.bounce = 0.1;
+      contact[i].surface.mu = dInfinity;
+      contact[i].surface.soft_erp = 0.96;
+      contact[i].surface.soft_cfm = 0.04;
+      dJointID c = dJointCreateContact (world,contactgroup,&contact[i]);
+      dJointAttach (c,
+		    dGeomGetBody(contact[i].geom.g1),
+		    dGeomGetBody(contact[i].geom.g2));
+    }
+  }
+}
+
+static void step (float step, usrcmd c)
+{
+	std::cout << "step\n";
+	gFlying = true;
+
+	
+	dSpaceCollide (space,0,&nearCallback);
+	
+	float speed = 1;
+	if (!gFlying)
+	{
+		const dReal* v = dBodyGetLinearVel(obj[0].body);
+		dBodySetLinearVel(obj[0].body, c.forward / 100.0f, c.right / 100.0f, v[2]);
+	}
+
+	dWorldQuickStep (world, step);
+	dJointGroupEmpty (contactgroup);
+
+	const dReal* pos = dBodyGetPosition(obj[0].body);
+	const dReal* rot = dBodyGetQuaternion(obj[0].body);
+	const dReal* w = dBodyGetAngularVel(obj[0].body);
+	const dReal* v = dBodyGetLinearVel(obj[0].body);
+	
+
+	// remove all contact joints
+	dJointGroupEmpty(contactgroup);
+
+	dsSetTexture(DS_WOOD);
+	for (int i=0; i<num; i++) {
+					if (0) {
+							dsSetColor(0,0.7,1);
+					} else if (obj[i].body && !dBodyIsEnabled(obj[i].body)) {
+							dsSetColor(1,0.8,0);
+					} else {
+							dsSetColor(1,1,0);
+					}
+					drawGeom(obj[i].geom,0,0,0);
+	}
+
+	float offset = 1.0;
+  float xyz[3] = {pos[0] - offset, pos[1] - offset, pos[2]+0.1};
+	float empty[3] = {0,0,0};
+  dsSetViewpoint(xyz, empty);
+
+	//std::cout << "f:" << gFlying << "\n";
+	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
+}
+static void simLoop (int pause)
+{
+	static float lastSentTime = GetCurrTime();
 	{
 		const float currT = GetCurrTime();
 		if (currT < lastSentTime + 0.05)
-			continue;
+			return;
+		
+		lastSentTime = currT;
 
 		RakNet::Packet *packet;
-		for (packet=peer->Receive(); packet; peer->DeallocatePacket(packet), packet=peer->Receive())
+		for (packet=gPeer->Receive(); packet; gPeer->DeallocatePacket(packet), packet=gPeer->Receive())
 		{
 			unsigned char type = GetPacketIdentifier(packet);
 			switch (type)
 			{
 				case ID_MY_MSG: 
 					{
+						Msg m;
 #if USE_BIT_STREAN
-						RakNet::Msg m;
 						BitStream myBitStream(packet->data, packet->length, false); // The false is for efficiency so we don't make a copy of the passed data
 						myBitStream.Read(m.useTimeStamp);
 						myBitStream.Read(m.timeStamp);
@@ -50,13 +257,43 @@ int main()
 						Dump(m);
 						
 #else
-						Msg* m = reinterpret_cast<Msg*>(packet->data);
+						Msg* pm = reinterpret_cast<Msg*>(packet->data);
 						assert(packet->length == sizeof(Msg));
-						ReverseTimeStamp(*m);
-						m->timeStamp += peer->GetClockDifferential(packet);
-						Dump(*m);
+						m = *pm;
+						ReverseTimeStamp(m);
+						m.serverTime += gPeer->GetClockDifferential(packet);
+						Dump(m);
 #endif
 						//std::cout << "my_msg:" << packet->length << ":" << sizeof(Msg) << "\n";
+						
+						int  msec = m.serverTime - gServerPState.lastCommandTime;
+						if (!msec)
+						{
+
+							std::cout << "ALERT! cmd diff time is 0\n";
+
+							if (m.serverTime > 0)
+								gServerPState.lastCommandTime = m.serverTime;
+							continue;
+						}
+						float sec = msec / 1000.f;
+
+						
+						
+						//obtain input velocity from packet
+						usrcmd c;
+						c.forward = m.forward;
+						c.right = m.right;
+
+						//simulation
+						step(sec, c);
+
+						gServerPState.lastCommandTime = m.serverTime;
+
+						const dReal* pos = dBodyGetPosition(obj[0].body);
+						gServerPState.pos[0] = pos[0];
+						gServerPState.pos[1] = pos[1];
+						gServerPState.pos[2] = pos[2];
 
 						break;
 					}
@@ -70,7 +307,50 @@ int main()
 
 			}
 		} 
+		//TODO:send back state
 	}
+}
+
+
+int main (int argc, char **argv)
+{
+	std::cout << "Server\n";
+
+	gPeer = RakNet::RakPeerInterface::GetInstance();
+	assert(gPeer);
+
+	gPeer->SetOccasionalPing(true);
+
+	RakNet::SocketDescriptor* p_SD = new RakNet::SocketDescriptor(kServerPort,0);
+	gPeer->Startup(kMaxConnectionsAllowed, p_SD, 1);
+	gPeer->SetMaximumIncomingConnections(kMaxPlayersPerServer);
+
+  // setup pointers to drawstuff callback functions
+  dsFunctions fn;
+  fn.version = DS_VERSION;
+  fn.start = &start;
+  fn.step = &simLoop;
+  fn.command = 0;
+  fn.commandRelease = 0;
+  fn.mouseMove = 0;
+	
+  fn.stop = 0;
+  fn.path_to_textures = DRAWSTUFF_TEXTURE_PATH;
+
+  dInitODE2(0);
+  dRandSetSeed (time(0));
+  createTest();
+
+  dWorldSetGravity (world,0,0,-0.8);
+
+  ground = dCreatePlane (space,0,0,1,0);
+  // run simulation
+  dsSimulationLoop (argc,argv, 50, 50, 800,600,&fn);
+
+
+  dJointGroupDestroy(contactgroup);
+  dWorldDestroy (world);
+  dCloseODE();
 
 	return 0;	
 }

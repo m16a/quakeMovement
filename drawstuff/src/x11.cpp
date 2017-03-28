@@ -113,7 +113,7 @@ static int singlestep=0;		// 1 if single step key pressed
 static int writeframes=0;		// 1 if frame files to be written
 
 
-static void createMainWindow (int _width, int _height)
+static void createMainWindow (int x, int y, int _width, int _height)
 {
   // create X11 display connection
   display = XOpenDisplay (NULL);
@@ -149,7 +149,7 @@ static void createMainWindow (int _width, int _height)
   attributes.event_mask = ButtonPressMask | ButtonReleaseMask |
     KeyPressMask | KeyReleaseMask | /*ButtonMotionMask |*/ PointerMotionHintMask |
     StructureNotifyMask | PointerMotionMask;
-  win = XCreateWindow (display,RootWindow(display,screen),50,50,width,height,
+  win = XCreateWindow (display,RootWindow(display,screen),x,y,width,height,
 		       0,visual->depth, InputOutput,visual->visual,
 		       CWBackPixel | CWColormap | CWEventMask,&attributes);
 
@@ -223,21 +223,24 @@ static void handleEvent (XEvent &event, dsFunctions *fn)
 		     &mask);
     }
 		
-		static bool warpPointer = false;
-		if (!warpPointer)
+		if (fn->mouseMove)//skip mouse events if we have no handler for it
 		{
-			//dsMotion (mode, event.xmotion.x - mx, event.xmotion.y - my);
-			if (fn->mouseMove)
-				fn->mouseMove(event.xmotion.x - mx, event.xmotion.y - my);
+			static bool warpPointer = false;
+			if (!warpPointer)
+			{
+				//dsMotion (mode, event.xmotion.x - mx, event.xmotion.y - my);
+				if (fn->mouseMove)
+					fn->mouseMove(event.xmotion.x - mx, event.xmotion.y - my);
 
-			warpPointer = true;
-			XWarpPointer(display, None, win, 0,0,0,0,400,300);
+				warpPointer = true;
+				XWarpPointer(display, None, win, 0,0,0,0,400,300);
+			}
+			else
+				warpPointer = false;
+
+			mx = event.xmotion.x;
+			my = event.xmotion.y;
 		}
-		else
-			warpPointer = false;
-
-		mx = event.xmotion.x;
-		my = event.xmotion.y;
 		
   }
   return;
@@ -375,11 +378,11 @@ void microsleep(int usecs)
 #endif
 }
 
-void dsPlatformSimLoop (int window_width, int window_height, dsFunctions *fn,
+void dsPlatformSimLoop (int x, int y, int window_width, int window_height, dsFunctions *fn,
 			int initial_pause)
 {
   pausemode = initial_pause;
-  createMainWindow (window_width, window_height);
+  createMainWindow (x, y, window_width, window_height);
   glXMakeCurrent (display,win,glx_context);
 
   dsStartGraphics (window_width,window_height,fn);

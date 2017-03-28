@@ -15,7 +15,7 @@ enum
 struct Msg 
 {
 	unsigned char useTimeStamp; // Assign ID_TIMESTAMP to this
-	RakNet::Time timeStamp; // Put the system time in here returned by RakNet::GetTime()
+	RakNet::Time serverTime; // Put the system time in here returned by RakNet::GetTime()
 	unsigned char typeId; // You should put here an enum you defined after the last one defined in MessageIdentifiers.h, lets say ID_SET_TIMED_MINE
 	signed char forward, right, up;
 

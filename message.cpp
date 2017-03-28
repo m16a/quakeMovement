@@ -5,7 +5,7 @@
 void FillMsg(Msg& m)
 {
 	m.useTimeStamp = ID_TIMESTAMP;
-	m.timeStamp = RakNet::GetTime();
+	m.serverTime = RakNet::GetTime();
 	m.typeId = ID_MY_MSG;
 	m.forward = 0;
 	m.right = 0;
@@ -15,7 +15,7 @@ void FillMsg(Msg& m)
 
 void Dump(Msg& m)
 {
-	std::cout << "t:" << m.timeStamp << "(" << (int)m.forward << " " << (int)m.right << " " << (int)m.up << ")\n";
+	std::cout << "t:" << m.serverTime << "(" << (int)m.forward << " " << (int)m.right << " " << (int)m.up << ")\n";
 	/*
 	for (int i=0; i < sizeof(Msg); ++i)
 	{
@@ -27,5 +27,5 @@ void Dump(Msg& m)
 
 void ReverseTimeStamp(Msg& m)
 {
-	RakNet::BitStream::ReverseBytesInPlace(reinterpret_cast<unsigned char*>(&m.timeStamp), sizeof(RakNet::Time));
+	RakNet::BitStream::ReverseBytesInPlace(reinterpret_cast<unsigned char*>(&m.serverTime), sizeof(RakNet::Time));
 }

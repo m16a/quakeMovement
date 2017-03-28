@@ -63,6 +63,7 @@ static float gViewRot[3] = {0.0f, 0.0f, 0.0f};
 static bool gFlying = true;
 
 int gCmdIndex = 0;
+
 #define MAX_COMMANDS 64
 #define CMD_MASK (MAX_COMMANDS -1)
 usrcmd commands[MAX_COMMANDS];
@@ -219,6 +220,7 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 
 static void simLoop (int pause)
 {
+	std::cout << "loop\n";
   double dt = dsElapsedTime();
 	gFlying = true;
 
@@ -279,7 +281,7 @@ static void simLoop (int pause)
 
 	float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
 	//std::cout << "dir2d:"<< dir2d[0] << "-" << dir2d[1] << "\n";
-	if (vec[0] || vec[1])
+	//if (vec[0] || vec[1])
 	{
 		//std::cout << "move:"<< vec[0] << "-" << vec[1] << "\n";
 		// dir2d.cross(0,0,1)
@@ -314,7 +316,7 @@ static void simLoop (int pause)
 
 	{
 		const float currT = GetCurrTime();
-		if (currT < gLastSentTime + 0.05)
+		if (currT < gLastSentTime + 0.001)
 			return;
 
 		gLastSentTime = currT;
@@ -322,9 +324,9 @@ static void simLoop (int pause)
 		FillMsg(m);
 		m.forward = commands[gCmdIndex & CMD_MASK].forward;
 		m.right = commands[gCmdIndex & CMD_MASK].right;
-		m.timeStamp = commands[gCmdIndex & CMD_MASK].serverTime;
+		m.serverTime = commands[gCmdIndex & CMD_MASK].serverTime;
 
-		//Dump(m);
+		Dump(m);
 
 #if USE_BIT_STREAM 
 		RakNet::BitStream myBitStream;
@@ -478,7 +480,7 @@ int main (int argc, char **argv)
   fn.step = &simLoop;
   fn.command = &command;
   fn.commandRelease = &commandRelease;
-  fn.mouseMove= &mouseMove;
+  fn.mouseMove = &mouseMove;
 	
   fn.stop = 0;
   fn.path_to_textures = DRAWSTUFF_TEXTURE_PATH;
@@ -491,7 +493,7 @@ int main (int argc, char **argv)
 
   ground = dCreatePlane (space,0,0,1,0);
   // run simulation
-  dsSimulationLoop (argc,argv,800,600,&fn);
+  dsSimulationLoop (argc,argv,600, 50, 800,600,&fn);
 
 
 	gLastSentTime = GetCurrTime();

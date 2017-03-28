@@ -1270,7 +1270,7 @@ static void setShadowDrawingMode()
 
 
 extern "C" void dsSimulationLoop (int argc, char **argv,
-				  int window_width, int window_height,
+				  int x, int y, int window_width, int window_height,
 				  dsFunctions *fn)
 {
   if (current_state != 0) dsError ("dsSimulationLoop() called more than once");
@@ -1292,7 +1292,7 @@ extern "C" void dsSimulationLoop (int argc, char **argv,
     dsDebug ("bad version number in dsFunctions structure");
 
   initMotionModel();
-  dsPlatformSimLoop (window_width,window_height,fn,initial_pause);
+  dsPlatformSimLoop (x,y,window_width,window_height,fn,initial_pause);
 
   current_state = 0;
 }

@@ -105,7 +105,7 @@ typedef struct dsFunctions {
  * @param fn Callback functions.
  */
 DS_API void dsSimulationLoop (int argc, char **argv,
-		       int window_width, int window_height,
+		       int x, int y, int window_width, int window_height,
 		       struct dsFunctions *fn);
 
 /**

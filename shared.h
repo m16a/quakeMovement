@@ -23,8 +23,9 @@ struct usrcmd
 
 struct pstate
 {
-	usrcmd cmd;
-	float vec[3];
+	//usrcmd cmd;
+	RakNet::Time lastCommandTime;
+	float pos[3];
 };
 
 #endif //_SHARED_H_
