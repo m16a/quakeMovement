@@ -6,4 +6,5 @@
 [*] apply player status from server to local client
 [ ] client side prediction(do exclusively for one local player only) 
 [ ] support jump on server
+[ ] review packing send policy
 

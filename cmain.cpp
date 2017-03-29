@@ -221,13 +221,13 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 
 static void simLoop (int pause)
 {
-	std::cout << "loop\n";
+	std::cout << "simStep\n";
   double dt = dsElapsedTime();
 	gFlying = true;
 
   int nrofsteps = (int) ceilf(dt/kStepSize);
 	
-  dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
+  //dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
 
   for (int i=0; i<nrofsteps && !pause; i++)
   {
@@ -244,12 +244,6 @@ static void simLoop (int pause)
 	
 		//fprintf(stdout, "[%d]sT=%.3f pos(%.3f %.3f %.3f) vel:(%.3f %.3f %.3f)  rot(%.3f %.3f %.3f %.3f) w(%.3f %.3f %.3f)\n",frameNum, simTime, pos[0], pos[1], pos[2], v[0], v[1], v[2], rot[0], rot[1], rot[2], rot[3], w[0], w[1], w[2]);
 		frameNum++;
-	dMass tmp;
-	dBodyGetMass (obj[0].body, &tmp);
-	dReal* J = tmp.I;
-
-	//fprintf(stdout, "finite rotation:%d", dBodyGetFiniteRotationMode(obj[0].body));
-	//fprintf(stdout, "J(%.5f %.5f %.5f %.3f)(%.5f %.5f %.5f %.3f)(%.5f %.5f %.5f %.3f)\n", J[0],J[1],J[2],J[3],J[4],J[5],J[6],J[7],J[8],J[9],J[10],J[11]);
   }
 
 	// remove all contact joints
@@ -284,29 +278,33 @@ static void simLoop (int pause)
 
 	float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
 	//std::cout << "dir2d:"<< dir2d[0] << "-" << dir2d[1] << "\n";
-	//if (vec[0] || vec[1])
 	{
+
+		float res[2] = {vec[0] * dir2d[0] + vec[1] * dir2d[1], vec[0] * dir2d[1] - vec[1] * dir2d[0]};
 		//std::cout << "move:"<< vec[0] << "-" << vec[1] << "\n";
 		// dir2d.cross(0,0,1)
-		float res[2] = {vec[0] * dir2d[0] + vec[1] * dir2d[1], vec[0] * dir2d[1] - vec[1] * dir2d[0]};
-		
-		float res_norm = sqrt(res[0]*res[0] + res[1]*res[1]);
-
-		res[0] /= res_norm;
-		res[1] /= res_norm;
+		if (vec[0] || vec[1])
+		{	
+				float res_norm = sqrt(res[0]*res[0] + res[1]*res[1]);
+				res[0] /= res_norm;
+				res[1] /= res_norm;
+		}
 
 		float speed = 1;
 		if (!gFlying)
 		{
 			const dReal* v = dBodyGetLinearVel(obj[0].body);
-			//dBodySetLinearVel(obj[0].body, speed * res[0], speed * res[1], v[2]);
+			float resVel[3] = {speed * res[0], speed * res[1], v[2]};
+			std::cout << "clVel: " << resVel[0] << " " << resVel[1] << " " << resVel[2] << "\n"; 
+			dBodySetLinearVel(obj[0].body, resVel[0], resVel[1], resVel[2]);
 
 			usrcmd& c = commands[(++gCmdIndex) & CMD_MASK];
 			c.serverTime = RakNet::GetTime();
-			c.forward = static_cast<signed char>(speed * res[0] * 100.0f);
-			c.right = static_cast<signed char>(speed * res[1] * 100.0f);
+			c.forward = static_cast<signed char>(resVel[1] * 100.0f);
+			c.right = static_cast<signed char>(resVel[2] * 100.0f);
 		}
 	}
+
 
 	float offset = 0.0;
   float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.1};
@@ -329,7 +327,7 @@ static void simLoop (int pause)
 		m.right = commands[gCmdIndex & CMD_MASK].right;
 		m.serverTime = commands[gCmdIndex & CMD_MASK].serverTime;
 
-		Dump(m);
+		std::cout << "packet send: "; Dump(m);
 
 #if USE_BIT_STREAM 
 		RakNet::BitStream myBitStream;
