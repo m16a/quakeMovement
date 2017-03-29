@@ -29,6 +29,8 @@ struct usrcmd
 	signed char forward, right, jump;
 };
 
+void Dump(const usrcmd& c);
+
 struct pstate
 {
 	//usrcmd cmd;

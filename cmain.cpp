@@ -265,7 +265,7 @@ void createCMD()
 
 static void step (float step, usrcmd c)
 {
-	std::cout << "step\n";
+	std::cout << "\tstep t:" << step << " "; Dump(c);
 	gFlying = true;
 
 	
@@ -319,11 +319,11 @@ static void simLoop (int pause)
 	
   dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
 
-	bool noprediction = 1;
+	bool noprediction = 0;
 	if (!noprediction)
 	{
 		pstate oldState = gPlayerState;
-		int i = gCmdIndex - MAX_COMMANDS - 1;
+		int i = gCmdIndex - MAX_COMMANDS + 1;
 		for (; i <= gCmdIndex; ++i)
 		{
 			usrcmd& c = commands[i & CMD_MASK];
@@ -344,6 +344,7 @@ static void simLoop (int pause)
 			step(sec, c);
 			gPlayerState.lastCommandTime = c.serverTime;
 		}
+		gPlayerState = oldState;
 	}
 	else 
 	{
@@ -388,7 +389,6 @@ static void simLoop (int pause)
 		RakNet::Packet *packet;
 		for (packet=gPeer->Receive(); packet; gPeer->DeallocatePacket(packet), packet=gPeer->Receive())
 		{
-			//std::cout << "reading\t";
 			unsigned char type = GetPacketIdentifier(packet);
 			switch (type)
 			{
@@ -397,7 +397,7 @@ static void simLoop (int pause)
 						ClMsg* m = reinterpret_cast<ClMsg*>(packet->data);
 						assert(packet->length == sizeof(ClMsg));
 						gPlayerState = m->state;
-						Dump(*m);
+						std::cout << "ackState: "; Dump(*m);
 						break;
 					}
 				case ID_SV_MSG: 
@@ -486,7 +486,7 @@ static void command (int cmd)
 void mouseMove(int dx, int dy)
 {
 	//std::cout << "rot" << dx << " " << dy << "\n";
-	const float speed = 0.8f;
+	const float speed = 2.0f;
 	if (dx < 0)
 		gViewRot[0] += speed;
 	else if (dx > 0) 
@@ -537,7 +537,7 @@ int main (int argc, char **argv)
 
   ground = dCreatePlane (space,0,0,1,0);
   // run simulation
-  dsSimulationLoop (argc,argv,600, 50, 800,600,&fn);
+  dsSimulationLoop (argc,argv,600, 50, 1024, 800,&fn);
 
 
 	gLastSentTime = GetCurrTime();

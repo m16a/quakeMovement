@@ -65,3 +65,8 @@ void Dump(ClMsg& m)
 {
 	Dump(m.state);
 }
+
+void Dump(const usrcmd& c)
+{
+	std::cout << "t:" << c.serverTime << "(" << (int)c.forward << " " << (int)c.right << " " << (int)c.jump << ")\n";
+}

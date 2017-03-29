@@ -233,7 +233,7 @@ static void handleEvent (XEvent &event, dsFunctions *fn)
 					fn->mouseMove(event.xmotion.x - mx, event.xmotion.y - my);
 
 				warpPointer = true;
-				XWarpPointer(display, None, win, 0,0,0,0,400,300);
+				XWarpPointer(display, None, win, 0,0,0,0,width/2,height/2);
 			}
 			else
 				warpPointer = false;
