@@ -2,7 +2,7 @@
 		[*] support now one client only
 		[*] what to do in case of missed packet? - answer: do nothing
 [*] apply usrcmds on server
-[ ] send back to client player status
+[ ] send back player status to client 
 [ ] apply player status from server to local client
 [ ] client side prediction(do exclusively for one local player only) 
 [ ] support jump on server

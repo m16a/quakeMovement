@@ -8,11 +8,13 @@
 
 enum 
 {
-	ID_MY_MSG = ID_USER_PACKET_ENUM+1
+	ID_SV_MSG = ID_USER_PACKET_ENUM+1
+
 };
 
+//message from client to server
 #pragma pack(push, 1)
-struct Msg 
+struct SvMsg 
 {
 	unsigned char useTimeStamp; // Assign ID_TIMESTAMP to this
 	RakNet::Time serverTime; // Put the system time in here returned by RakNet::GetTime()
@@ -24,7 +26,7 @@ struct Msg
 };
 #pragma pack(pop)
 
-void FillMsg(Msg& m);
-void Dump(Msg& m);
-void ReverseTimeStamp(Msg& m);
+void FillMsg(SvMsg& m);
+void Dump(SvMsg& m);
+void ReverseTimeStamp(SvMsg& m);
 #endif //_MESSAGE_H_

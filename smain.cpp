@@ -242,9 +242,9 @@ static void simLoop (int pause)
 			unsigned char type = GetPacketIdentifier(packet);
 			switch (type)
 			{
-				case ID_MY_MSG: 
+				case ID_SV_MSG: 
 					{
-						Msg m;
+						SvMsg m;
 #if USE_BIT_STREAN
 						BitStream myBitStream(packet->data, packet->length, false); // The false is for efficiency so we don't make a copy of the passed data
 						myBitStream.Read(m.useTimeStamp);
@@ -257,8 +257,8 @@ static void simLoop (int pause)
 						Dump(m);
 						
 #else
-						Msg* pm = reinterpret_cast<Msg*>(packet->data);
-						assert(packet->length == sizeof(Msg));
+						SvMsg* pm = reinterpret_cast<SvMsg*>(packet->data);
+						assert(packet->length == sizeof(SvMsg));
 						m = *pm;
 						ReverseTimeStamp(m);
 						m.serverTime += gPeer->GetClockDifferential(packet);

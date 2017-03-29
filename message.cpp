@@ -2,18 +2,18 @@
 #include <iostream>
 #include <iomanip>
 
-void FillMsg(Msg& m)
+void FillMsg(SvMsg& m)
 {
 	m.useTimeStamp = ID_TIMESTAMP;
 	m.serverTime = RakNet::GetTime();
-	m.typeId = ID_MY_MSG;
+	m.typeId = ID_SV_MSG;
 	m.forward = 0;
 	m.right = 0;
 	m.up = 0;
 }
 
 
-void Dump(Msg& m)
+void Dump(SvMsg& m)
 {
 	std::cout << "t:" << m.serverTime << "(" << (int)m.forward << " " << (int)m.right << " " << (int)m.up << ")\n";
 	/*
@@ -25,7 +25,7 @@ void Dump(Msg& m)
 	*/
 }
 
-void ReverseTimeStamp(Msg& m)
+void ReverseTimeStamp(SvMsg& m)
 {
 	RakNet::BitStream::ReverseBytesInPlace(reinterpret_cast<unsigned char*>(&m.serverTime), sizeof(RakNet::Time));
 }

@@ -133,12 +133,6 @@ void createTest()
   dBodySetPosition(obj[0].body, 0, 0, SIDE / 2.0f);
 	dBodySetMass(obj[0].body, &m);
 
-	dVector3 impF;
-	//dWorldImpulseToForce(world, kStepSize, 0.01, 0, 0, impF);
-	//dBodyAddForceAtPos(obj[0].body, impF[0], impF[1], impF[2], -0.05, 0.05, 0.5);
-
-	//dBodySetLinearVel(obj[0].body, -0.3, 0, 0.3);
-	//dBodySetAngularVel(obj[0].body, 0, 0, 2);
 	dGeomSetBody(obj[0].geom, obj[0].body);
 
 	obj[1].geom = dCreateRay(space, SIDE / 2.0f + 0.01);
@@ -320,7 +314,7 @@ static void simLoop (int pause)
 			return;
 
 		gLastSentTime = currT;
-		Msg m;
+		SvMsg m;
 		FillMsg(m);
 		m.forward = commands[gCmdIndex & CMD_MASK].forward;
 		m.right = commands[gCmdIndex & CMD_MASK].right;
@@ -339,7 +333,7 @@ static void simLoop (int pause)
 		gPeer->Send(&myBitStream, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 #else
 		ReverseTimeStamp(m);
-		gPeer->Send(reinterpret_cast<char*>(&m), sizeof(Msg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+		gPeer->Send(reinterpret_cast<char*>(&m), sizeof(SvMsg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 #endif
 
 		//std::cout << "sent t:" << currT << "\n";
@@ -352,10 +346,10 @@ static void simLoop (int pause)
 			unsigned char type = GetPacketIdentifier(packet);
 			switch (type)
 			{
-				case ID_MY_MSG: 
+				case ID_SV_MSG: 
 					{
-						Msg* m = reinterpret_cast<Msg*>(packet->data);
-						assert(packet->length == sizeof(Msg));
+						SvMsg* m = reinterpret_cast<SvMsg*>(packet->data);
+						assert(packet->length == sizeof(SvMsg));
 
 						//Dump(*m);
 						break;
