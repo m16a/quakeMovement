@@ -236,9 +236,9 @@ void createCMD()
 	{
 		float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
 		
-		std::cout << "dir2d:"<< dir2d[0] << "-" << dir2d[1] << "\n";
+		//std::cout << "dir2d:"<< dir2d[0] << "-" << dir2d[1] << "\n";
 		float res[2] = {vec[0] * dir2d[0] + vec[1] * dir2d[1], vec[0] * dir2d[1] - vec[1] * dir2d[0]};
-		std::cout << "move:"<< vec[0] << "-" << vec[1] << "\n";
+		//std::cout << "move:"<< vec[0] << "-" << vec[1] << "\n";
 		if (vec[0] || vec[1])
 		{	
 				float res_norm = sqrt(res[0]*res[0] + res[1]*res[1]);
@@ -251,7 +251,7 @@ void createCMD()
 		{
 			const dReal* v = dBodyGetLinearVel(obj[0].body);
 			float resVel[3] = {speed * res[0], speed * res[1], v[2]};
-			std::cout << "clVel: " << resVel[0] << " " << resVel[1] << " " << resVel[2] << "\n"; 
+			//std::cout << "clVel: " << resVel[0] << " " << resVel[1] << " " << resVel[2] << "\n"; 
 	//		dBodySetLinearVel(obj[0].body, resVel[0], resVel[1], resVel[2]);
 
 			usrcmd& c = commands[(++gCmdIndex) & CMD_MASK];
@@ -265,7 +265,7 @@ void createCMD()
 
 static void step (float step, usrcmd c)
 {
-	std::cout << "\tstep t:" << step << " "; Dump(c);
+	//std::cout << "\tstep t:" << step << " "; Dump(c);
 	gFlying = true;
 
 	
@@ -285,26 +285,8 @@ static void step (float step, usrcmd c)
 	const dReal* w = dBodyGetAngularVel(obj[0].body);
 	const dReal* v = dBodyGetLinearVel(obj[0].body);
 	
-
 	// remove all contact joints
 	dJointGroupEmpty(contactgroup);
-
-	dsSetTexture(DS_WOOD);
-	for (int i=0; i<num; i++) {
-					if (0) {
-							dsSetColor(0,0.7,1);
-					} else if (obj[i].body && !dBodyIsEnabled(obj[i].body)) {
-							dsSetColor(1,0.8,0);
-					} else {
-							dsSetColor(1,1,0);
-					}
-					drawGeom(obj[i].geom,0,0,0);
-	}
-
-  float offset = 0.0;
-  float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
-  float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.1};
-  dsSetViewpoint(xyz,gViewRot);
 
 	//std::cout << "f:" << gFlying << "\n";
 	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
@@ -312,7 +294,7 @@ static void step (float step, usrcmd c)
 
 static void simLoop (int pause)
 {
-	std::cout << "simStep\n";
+	//std::cout << "simStep\n";
   double dt = dsElapsedTime();
 	gFlying = true;
 	createCMD();
@@ -333,7 +315,11 @@ static void simLoop (int pause)
 
 			if (oldState.lastCommandTime == gPlayerState.lastCommandTime)
 			{
-				//TODO: check prediction here!!!
+				//check prediction here
+				float dist = (oldState.pos[0] - gPlayerState.pos[0])*(oldState.pos[0] - gPlayerState.pos[0])+(oldState.pos[1] - gPlayerState.pos[1])*(oldState.pos[1] - gPlayerState.pos[1])+(oldState.pos[2] - gPlayerState.pos[2])*(oldState.pos[2] - gPlayerState.pos[2]);
+				dist = sqrt(dist);
+				if (dist > 0.1)
+					std::cout << "[PREDICTION ERROR]:" << dist << "\n"; 
 			}
 
 			int msecs = c.serverTime - gPlayerState.lastCommandTime;
@@ -353,6 +339,25 @@ static void simLoop (int pause)
 		step(0.001, empty);
 	}
 
+  float offset = 0.0;
+	const dReal* pos = dBodyGetPosition(obj[0].body);
+  float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
+  float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.1};
+  dsSetViewpoint(xyz,gViewRot);
+	
+	//drawing
+	dsSetTexture(DS_WOOD);
+	for (int i=0; i<num; i++) {
+					if (0) {
+							dsSetColor(0,0.7,1);
+					} else if (obj[i].body && !dBodyIsEnabled(obj[i].body)) {
+							dsSetColor(1,0.8,0);
+					} else {
+							dsSetColor(1,1,0);
+					}
+					drawGeom(obj[i].geom,0,0,0);
+	}
+
 	// NETWORK STAF
 
 	{
@@ -367,7 +372,7 @@ static void simLoop (int pause)
 		m.right = commands[gCmdIndex & CMD_MASK].right;
 		m.serverTime = commands[gCmdIndex & CMD_MASK].serverTime;
 
-		std::cout << "packet send: "; Dump(m);
+		//std::cout << "packet send: "; Dump(m);
 
 #if USE_BIT_STREAM 
 		RakNet::BitStream myBitStream;
@@ -397,7 +402,7 @@ static void simLoop (int pause)
 						ClMsg* m = reinterpret_cast<ClMsg*>(packet->data);
 						assert(packet->length == sizeof(ClMsg));
 						gPlayerState = m->state;
-						std::cout << "ackState: "; Dump(*m);
+						//std::cout << "ackState: "; Dump(*m);
 						break;
 					}
 				case ID_SV_MSG: 
@@ -419,7 +424,6 @@ static void simLoop (int pause)
 			}
 		}
 	}
-
 }
 
 char locase (char c)
