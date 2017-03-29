@@ -225,6 +225,7 @@ static void step (float step, usrcmd c)
 	//std::cout << "f:" << gFlying << "\n";
 	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
 }
+
 static void simLoop (int pause)
 {
 	static float lastSentTime = GetCurrTime();

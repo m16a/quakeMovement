@@ -263,17 +263,21 @@ void createCMD()
 
 }
 
-static void simLoop (int pause)
+static void step (float step, usrcmd c)
 {
-	std::cout << "simStep\n";
-  double dt = dsElapsedTime();
+	std::cout << "step\n";
 	gFlying = true;
-	createCMD();
-	
-  dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
 
+	
 	dSpaceCollide (space,0,&nearCallback);
-	dWorldQuickStep (world, kStepSize);
+	
+	if (!gFlying)
+	{
+		const dReal* v = dBodyGetLinearVel(obj[0].body);
+		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/gPlayerMaxSpeed), c.right / (100.0f/gPlayerMaxSpeed), v[2]);
+	}
+
+	dWorldQuickStep (world, step);
 	dJointGroupEmpty (contactgroup);
 
 	const dReal* pos = dBodyGetPosition(obj[0].body);
@@ -281,7 +285,6 @@ static void simLoop (int pause)
 	const dReal* w = dBodyGetAngularVel(obj[0].body);
 	const dReal* v = dBodyGetLinearVel(obj[0].body);
 	
-		//fprintf(stdout, "[%d]sT=%.3f pos(%.3f %.3f %.3f) vel:(%.3f %.3f %.3f)  rot(%.3f %.3f %.3f %.3f) w(%.3f %.3f %.3f)\n",frameNum, simTime, pos[0], pos[1], pos[2], v[0], v[1], v[2], rot[0], rot[1], rot[2], rot[3], w[0], w[1], w[2]);
 
 	// remove all contact joints
 	dJointGroupEmpty(contactgroup);
@@ -298,15 +301,56 @@ static void simLoop (int pause)
 					drawGeom(obj[i].geom,0,0,0);
 	}
 
-
-
-	float offset = 0.0;
-	float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
+  float offset = 0.0;
+  float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
   float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.1};
   dsSetViewpoint(xyz,gViewRot);
 
 	//std::cout << "f:" << gFlying << "\n";
 	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
+}
+
+static void simLoop (int pause)
+{
+	std::cout << "simStep\n";
+  double dt = dsElapsedTime();
+	gFlying = true;
+	createCMD();
+	
+  dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
+
+	bool noprediction = 1;
+	if (!noprediction)
+	{
+		pstate oldState = gPlayerState;
+		int i = gCmdIndex - MAX_COMMANDS - 1;
+		for (; i <= gCmdIndex; ++i)
+		{
+			usrcmd& c = commands[i & CMD_MASK];
+				
+			if (c.serverTime < gPlayerState.lastCommandTime)
+				continue;
+
+			if (oldState.lastCommandTime == gPlayerState.lastCommandTime)
+			{
+				//TODO: check prediction here!!!
+			}
+
+			int msecs = c.serverTime - gPlayerState.lastCommandTime;
+			if (!msecs)
+				continue;
+
+			float sec = msecs / 1000.f;
+			step(sec, c);
+			gPlayerState.lastCommandTime = c.serverTime;
+		}
+	}
+	else 
+	{
+		usrcmd empty;
+		empty.forward = empty.right = 0;
+		step(0.001, empty);
+	}
 
 	// NETWORK STAF
 
