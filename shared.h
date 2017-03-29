@@ -18,6 +18,8 @@ enum
 extern const int kServerPort;
 extern const char* kHost;
 
+extern float gPlayerMaxSpeed;
+
 float GetCurrTime();
 unsigned char GetPacketIdentifier(RakNet::Packet *p);
 

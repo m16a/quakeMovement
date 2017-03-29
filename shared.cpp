@@ -10,6 +10,8 @@ const int kServerPort =  60005;
 const char* kHost = "127.0.0.1";
 
 
+float gPlayerMaxSpeed = 5.0f;
+
 float GetCurrTime()
 {
 	return clock() / float(CLOCKS_PER_SEC);

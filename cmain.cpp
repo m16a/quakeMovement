@@ -247,7 +247,6 @@ static void simLoop (int pause)
 
 			//std::cout << "dir2d:"<< dir2d[0] << "-" << dir2d[1] << "\n";
 			{
-
 				float res[2] = {vec[0] * dir2d[0] + vec[1] * dir2d[1], vec[0] * dir2d[1] - vec[1] * dir2d[0]};
 				//std::cout << "move:"<< vec[0] << "-" << vec[1] << "\n";
 				// dir2d.cross(0,0,1)
@@ -258,7 +257,7 @@ static void simLoop (int pause)
 						res[1] /= res_norm;
 				}
 
-				float speed = 1;
+				float speed = gPlayerMaxSpeed;
 				if (!gFlying)
 				{
 					const dReal* v = dBodyGetLinearVel(obj[0].body);

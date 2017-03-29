@@ -187,7 +187,6 @@ static void step (float step, usrcmd c)
 	
 	dSpaceCollide (space,0,&nearCallback);
 	
-	float speed = 1;
 	if (!gFlying)
 	{
 		const dReal* v = dBodyGetLinearVel(obj[0].body);
@@ -277,8 +276,6 @@ static void simLoop (int pause)
 							continue;
 						}
 						float sec = msec / 1000.f;
-
-						
 						
 						//obtain input velocity from packet
 						usrcmd c;
