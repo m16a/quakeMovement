@@ -184,7 +184,7 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 
 static void step (float step, usrcmd c)
 {
-	std::cout << "step\n";
+	//std::cout << "step\n";
 	gFlying = true;
 
 	
@@ -239,7 +239,7 @@ static void simLoop (int pause)
 		if (currT < gLastSentTime + 0.05)
 			return;
 
-		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), -2, -2);
+		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), int(kPacketLoss * 100), kPacketExtraLagMS);
 		gLastSentTime = currT;
 		
 
@@ -319,7 +319,7 @@ static void simLoop (int pause)
 		if (gServerPState.lastCommandTime > 0)
 		{
 			std::cout << "send state: "; Dump(m);
-			gPeer->Send(reinterpret_cast<char*>(&m), sizeof(ClMsg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+			gPeer->Send(reinterpret_cast<char*>(&m), sizeof(ClMsg), HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 		}
 	}
 }
@@ -330,11 +330,15 @@ int main (int argc, char **argv)
 	std::cout << "Server\n";
 
 	gPeer = RakNet::RakPeerInterface::GetInstance();
+	//gPeer->ApplyNetworkSimulator(1, 100, 0);
 	assert(gPeer);
+
 
 	gPeer->SetOccasionalPing(true);
 
 	RakNet::SocketDescriptor* p_SD = new RakNet::SocketDescriptor(kServerPort,0);
+
+	gPeer->ApplyNetworkSimulator(kPacketLoss, kPacketExtraLagMS, 0);
 	gPeer->Startup(kMaxConnectionsAllowed, p_SD, 1);
 	gPeer->SetMaximumIncomingConnections(kMaxPlayersPerServer);
 

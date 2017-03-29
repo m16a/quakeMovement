@@ -8,6 +8,8 @@
 
 const int kServerPort =  60005;
 const char* kHost = "127.0.0.1";
+extern const float kPacketLoss = 0.0f;
+extern const int kPacketExtraLagMS = 100;
 
 
 float gPlayerMaxSpeed = 5.0f;
@@ -21,7 +23,6 @@ unsigned char GetPacketIdentifier(RakNet::Packet *p)
 {
 	if ((unsigned char)p->data[0] == ID_TIMESTAMP)
 	{
-		std::cout << "my message\n";
 		return (unsigned char) p->data[sizeof(RakNet::MessageID) + sizeof(RakNet::Time)];
 	}
 	else

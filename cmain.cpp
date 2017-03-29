@@ -327,6 +327,9 @@ static void simLoop (int pause)
 			if (!msecs)
 				continue;
 
+			dsSetColor(1,1,0);
+			drawGeom(obj[0].geom,0,0,0);
+
 			float sec = msecs / 1000.f;
 			step(sec, c);
 			gPlayerState.lastCommandTime = c.serverTime;
@@ -368,7 +371,7 @@ static void simLoop (int pause)
 		//if (currT < gLastSentTime + 0.05)
 			//return;
 		std::cout << "ts:" << currT << " " << gLastSentTime << "\n";
-		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), -2, -2);
+		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), int(kPacketLoss * 100), kPacketExtraLagMS);
 
 		gLastSentTime = currT;
 
@@ -524,6 +527,7 @@ int main (int argc, char **argv)
 	gPeer->SetOccasionalPing(true);
 
 	RakNet::SocketDescriptor* p_SD = new RakNet::SocketDescriptor();
+	gPeer->ApplyNetworkSimulator(kPacketLoss, kPacketExtraLagMS, 0);
 	gPeer->Startup(1, p_SD, 1);
 
 	gPeer->Connect(kHost, kServerPort, 0, 0);

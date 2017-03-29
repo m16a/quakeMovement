@@ -5,6 +5,11 @@
 [*] send back player status to client 
 [*] apply player status from server to local client
 [*] client side prediction(do exclusively for one local player only) 
-[ ] support jump on server
-[ ] review packet send policy
 [*] show FPS 
+[ ] support jump on server
+[*] review packet send policy
+[ ]	build simple map to test jumps 
+[*] simulate bad net conditions	
+[ ] remove bitstream sending 
+[ ] fix bugs on packet drop 
+[ ] fix bugs on packet latency 

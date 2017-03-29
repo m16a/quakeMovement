@@ -1,11 +1,14 @@
 #ifndef _SHARED_H_
 #define _SHARED_H_
 
+#define _DEBUG
+
 #include "raknet/RakPeerInterface.h"
 #include "raknet/RakNetTypes.h"
 #include "raknet/MessageIdentifiers.h"
 #include "raknet/GetTime.h"
 #include "raknet/BitStream.h"
+
 
 enum 
 {
@@ -17,6 +20,8 @@ enum
 
 extern const int kServerPort;
 extern const char* kHost;
+extern const float kPacketLoss;
+extern const int kPacketExtraLagMS;
 
 extern float gPlayerMaxSpeed;
 
