@@ -68,6 +68,8 @@ int gCmdIndex = 0;
 #define CMD_MASK (MAX_COMMANDS -1)
 usrcmd commands[MAX_COMMANDS];
 
+pstate gPlayerState;
+
 enum 
 {
 	eMoveFrwd = 1,
@@ -131,6 +133,11 @@ void createTest()
 	dMassSetBoxTotal(&m, 1, 10000000, 10000000, 10000000);//disable rotation
 	obj[0].geom = dCreateBox(space, SIDE, SIDE, SIDE);
   dBodySetPosition(obj[0].body, 0, 0, SIDE / 2.0f);
+
+	gPlayerState.pos[0] = 0;
+	gPlayerState.pos[1] = 0;
+	gPlayerState.pos[2] = SIDE / 2.0f;
+
 	dBodySetMass(obj[0].body, &m);
 
 	dGeomSetBody(obj[0].geom, obj[0].body);
@@ -220,6 +227,8 @@ static void simLoop (int pause)
 
   int nrofsteps = (int) ceilf(dt/kStepSize);
 	
+  dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
+
   for (int i=0; i<nrofsteps && !pause; i++)
   {
 		static float simTime = 0.0f;
@@ -350,17 +359,13 @@ static void simLoop (int pause)
 					{
 						ClMsg* m = reinterpret_cast<ClMsg*>(packet->data);
 						assert(packet->length == sizeof(ClMsg));
-
+						gPlayerState = m->state;
 						Dump(*m);
 						break;
 					}
 				case ID_SV_MSG: 
 					{
 						assert(0);
-						SvMsg* m = reinterpret_cast<SvMsg*>(packet->data);
-						assert(packet->length == sizeof(SvMsg));
-
-						//Dump(*m);
 						break;
 					}
 				case ID_CONNECTION_REQUEST_ACCEPTED:
@@ -374,7 +379,6 @@ static void simLoop (int pause)
 					if (packet->data)
 						std::cout << "\t data:" << packet->data << "\n";
 					break;
-
 			}
 		}
 	}

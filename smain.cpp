@@ -311,8 +311,11 @@ static void simLoop (int pause)
 		ClMsg m;
 		m.typeId = ID_CL_MSG;
 		m.state = gServerPState;
-		std::cout << "send state: "; Dump(m);
-		gPeer->Send(reinterpret_cast<char*>(&m), sizeof(ClMsg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+		if (gServerPState.lastCommandTime > 0)
+		{
+			std::cout << "send state: "; Dump(m);
+			gPeer->Send(reinterpret_cast<char*>(&m), sizeof(ClMsg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+		}
 	}
 }
 
