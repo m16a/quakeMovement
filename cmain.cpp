@@ -64,9 +64,10 @@ static float gViewRot[3] = {0.0f, 0.0f, 0.0f};
 static bool gFlying = true;
 
 int gCmdIndex = 0;
+int gLastSentCmdIndex = 0;
 
 #define MAX_COMMANDS 64
-#define CMD_MASK (MAX_COMMANDS -1)
+#define CMD_MASK (MAX_COMMANDS - 1)
 usrcmd commands[MAX_COMMANDS];
 
 pstate gPlayerState;
@@ -364,37 +365,38 @@ static void simLoop (int pause)
 		timeval tv;
 		gettimeofday(&tv, 0);
 		const double currT = tv.tv_sec + (double) tv.tv_usec / 1000000.0 ;
-		if (currT < gLastSentTime + 0.05)
-			return;
+		//if (currT < gLastSentTime + 0.05)
+			//return;
 		std::cout << "ts:" << currT << " " << gLastSentTime << "\n";
 		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), -2, -2);
 
 		gLastSentTime = currT;
 
-		SvMsg m;
-		FillMsg(m);
-		m.forward = commands[gCmdIndex & CMD_MASK].forward;
-		m.right = commands[gCmdIndex & CMD_MASK].right;
-		m.serverTime = commands[gCmdIndex & CMD_MASK].serverTime;
+		while (gLastSentCmdIndex <= gCmdIndex) 
+		{
+			SvMsg m;
+			FillMsg(m);
+			m.forward = commands[gLastSentCmdIndex & CMD_MASK].forward;
+			m.right = commands[gLastSentCmdIndex & CMD_MASK].right;
+			m.serverTime = commands[gLastSentCmdIndex & CMD_MASK].serverTime;
 
-		//std::cout << "packet send: "; Dump(m);
+			//std::cout << "packet send: "; Dump(m);
+			gLastSentCmdIndex++; 
 
 #if USE_BIT_STREAM 
-		RakNet::BitStream myBitStream;
-		myBitStream.Write(m.useTimeStamp);
-		myBitStream.Write(m.timeStamp);
-		myBitStream.Write(m.typeId);
-		myBitStream.Write(m.x);
-		myBitStream.Write(m.y);
-		myBitStream.Write(m.z);
-		gPeer->Send(&myBitStream, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+			RakNet::BitStream myBitStream;
+			myBitStream.Write(m.useTimeStamp);
+			myBitStream.Write(m.timeStamp);
+			myBitStream.Write(m.typeId);
+			myBitStream.Write(m.x);
+			myBitStream.Write(m.y);
+			myBitStream.Write(m.z);
+			gPeer->Send(&myBitStream, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 #else
-		ReverseTimeStamp(m);
-		gPeer->Send(reinterpret_cast<char*>(&m), sizeof(SvMsg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+			ReverseTimeStamp(m);
+			gPeer->Send(reinterpret_cast<char*>(&m), sizeof(SvMsg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 #endif
-
-		//std::cout << "sent t:" << currT << "\n";
-		
+		}	
 
 		RakNet::Packet *packet;
 		for (packet=gPeer->Receive(); packet; gPeer->DeallocatePacket(packet), packet=gPeer->Receive())
