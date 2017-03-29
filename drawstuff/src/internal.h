@@ -47,4 +47,5 @@ void dsSetShadows (int a);
 int dsGetTextures();
 void dsSetTextures (int a);
 
+void dsPlatformSetInfoToDraw(int pRate, int pDrop, int pLatency);
 #endif

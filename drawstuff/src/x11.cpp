@@ -48,6 +48,19 @@
 #include <drawstuff/version.h>
 #include "internal.h"
 
+//stats to draw
+int gPacketRate = -1;
+int gPacketDrop = -1;
+int gPacketLatency = -1;
+
+void dsPlatformSetInfoToDraw(int pRate, int pDrop, int pLatency)
+{
+	gPacketRate = pRate;
+	gPacketDrop = pDrop;
+	gPacketLatency = pLatency;
+}
+
+//
 //***************************************************************************
 // error handling for unix
 
@@ -435,6 +448,16 @@ void dsPlatformSimLoop (int x, int y, int window_width, int window_height, dsFun
     double curr = tv.tv_sec + (double) tv.tv_usec / 1000000.0 ;
     if (curr-prev >= 1.0/60.0)
     {
+			// set the window title
+			XTextProperty window_name;
+			char buff[100];
+			snprintf(buff, sizeof(buff), "FPS:%.0f pRate:%d pLoss:%d%% pPing:%d", 1.0f / (curr-prev), gPacketRate, gPacketDrop, gPacketLatency);
+			window_name.value = (unsigned char*)buff;
+			window_name.encoding = XA_STRING;
+			window_name.format = 8;
+			window_name.nitems = strlen((char *) window_name.value);
+			XSetWMName (display,win,&window_name);
+
       prev = curr;
       processDrawFrame(&frame, fn);
     }

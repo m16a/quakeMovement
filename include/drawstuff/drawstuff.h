@@ -299,6 +299,8 @@ DS_API void dsSetCapsuleQuality (int n);		/* default = 3 */
  */
 DS_API void dsSetDrawMode(int mode);
 
+DS_API void dsSetInfoToDraw(int pRate, int pDrop, int pLatency);
+
 /* Backwards compatible API */
 #define dsDrawCappedCylinder dsDrawCapsule
 #define dsDrawCappedCylinderD dsDrawCapsuleD

@@ -5,6 +5,7 @@
 
 #include <ode/ode.h>
 #include <drawstuff/drawstuff.h>
+#include <sys/time.h>
 
 #include "shared.h"
 
@@ -25,6 +26,8 @@ const int kMaxConnectionsAllowed = 2;
 const int kMaxPlayersPerServer = 2;
 
 RakNet::RakPeerInterface* gPeer = 0;
+
+double gLastSentTime = 0; 
 
 pstate gServerPState;
 
@@ -228,13 +231,17 @@ static void step (float step, usrcmd c)
 
 static void simLoop (int pause)
 {
-	static float lastSentTime = GetCurrTime();
+	timeval tv;
+	gettimeofday(&tv, 0);
+	const double currT = tv.tv_sec + (double) tv.tv_usec / 1000000.0 ;
 	{
 		const float currT = GetCurrTime();
-		if (currT < lastSentTime + 0.05)
+		if (currT < gLastSentTime + 0.05)
 			return;
+
+		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), -2, -2);
+		gLastSentTime = currT;
 		
-		lastSentTime = currT;
 
 		RakNet::Packet *packet;
 		for (packet=gPeer->Receive(); packet; gPeer->DeallocatePacket(packet), packet=gPeer->Receive())

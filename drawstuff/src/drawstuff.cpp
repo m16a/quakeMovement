@@ -1268,6 +1268,10 @@ static void setShadowDrawingMode()
   glDepthRange (0,0.9999);
 }
 
+extern "C" void dsSetInfoToDraw(int pRate, int pDrop, int pLatency)
+{
+	dsPlatformSetInfoToDraw(pRate, pDrop, pLatency);
+}
 
 extern "C" void dsSimulationLoop (int argc, char **argv,
 				  int x, int y, int window_width, int window_height,

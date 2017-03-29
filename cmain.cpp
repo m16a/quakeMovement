@@ -7,6 +7,7 @@
 #include <ode/ode.h>
 #include <drawstuff/drawstuff.h>
 #include <cassert>
+#include <sys/time.h>
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244 4305)  // for VC++, no precision loss complaints
@@ -38,7 +39,7 @@
 RakNet::RakPeerInterface* gPeer = 0;
 
 const float kStepSize = 0.01f;
-float gLastSentTime = 0; 
+double gLastSentTime = 0; 
 
 struct MyObject {
   dBodyID body;			// the body
@@ -294,8 +295,7 @@ static void step (float step, usrcmd c)
 
 static void simLoop (int pause)
 {
-	//std::cout << "simStep\n";
-  double dt = dsElapsedTime();
+	std::cout << "simStep\n";
 	gFlying = true;
 	createCMD();
 	
@@ -361,11 +361,16 @@ static void simLoop (int pause)
 	// NETWORK STAF
 
 	{
-		const float currT = GetCurrTime();
-		if (currT < gLastSentTime + 0.001)
+		timeval tv;
+		gettimeofday(&tv, 0);
+		const double currT = tv.tv_sec + (double) tv.tv_usec / 1000000.0 ;
+		if (currT < gLastSentTime + 0.05)
 			return;
+		std::cout << "ts:" << currT << " " << gLastSentTime << "\n";
+		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), -2, -2);
 
 		gLastSentTime = currT;
+
 		SvMsg m;
 		FillMsg(m);
 		m.forward = commands[gCmdIndex & CMD_MASK].forward;
