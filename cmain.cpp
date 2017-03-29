@@ -397,7 +397,7 @@ static void simLoop (int pause)
 			gPeer->Send(&myBitStream, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 #else
 			ReverseTimeStamp(m);
-			gPeer->Send(reinterpret_cast<char*>(&m), sizeof(SvMsg), HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+			gPeer->Send(reinterpret_cast<char*>(&m), sizeof(SvMsg), HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 #endif
 		}	
 
