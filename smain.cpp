@@ -100,7 +100,7 @@ void createTest()
 	obj[0].body = dBodyCreate(world);
 	dMassSetBoxTotal(&m, 1, 10000000, 10000000, 10000000);//disable rotation
 	obj[0].geom = dCreateBox(space, SIDE, SIDE, SIDE);
-  dBodySetPosition(obj[0].body, 0, 0, 0.2);
+  dBodySetPosition(obj[0].body, 0, 0, SIDE / 2.0f);
 	dBodySetMass(obj[0].body, &m);
 
 	dGeomSetBody(obj[0].geom, obj[0].body);
