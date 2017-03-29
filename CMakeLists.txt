@@ -3,8 +3,8 @@ project (quakeMovement)
 
 include_directories(include)
 
-set (server_SRC smain.cpp message.cpp shared.cpp)
-set (client_SRC cmain.cpp message.cpp shared.cpp)
+set (server_SRC smain.cpp shared.cpp)
+set (client_SRC cmain.cpp shared.cpp)
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/drawstuff/src") 
 

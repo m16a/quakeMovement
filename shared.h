@@ -9,8 +9,8 @@
 
 enum 
 {
-	ID_SV_MSG = ID_USER_PACKET_ENUM+1
-
+	ID_SV_MSG = ID_USER_PACKET_ENUM+1,
+	ID_CL_MSG 
 };
 
 #define USE_BIT_STREAM 0

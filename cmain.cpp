@@ -346,8 +346,17 @@ static void simLoop (int pause)
 			unsigned char type = GetPacketIdentifier(packet);
 			switch (type)
 			{
+				case ID_CL_MSG: 
+					{
+						ClMsg* m = reinterpret_cast<ClMsg*>(packet->data);
+						assert(packet->length == sizeof(ClMsg));
+
+						Dump(*m);
+						break;
+					}
 				case ID_SV_MSG: 
 					{
+						assert(0);
 						SvMsg* m = reinterpret_cast<SvMsg*>(packet->data);
 						assert(packet->length == sizeof(SvMsg));
 
