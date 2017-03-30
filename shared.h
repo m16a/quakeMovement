@@ -9,7 +9,7 @@
 #include "raknet/BitStream.h"
 
 
-#define LOG_PACKETS 1
+#define LOG_PACKETS 0
 
 enum 
 {
@@ -17,7 +17,7 @@ enum
 	ID_CL_MSG 
 };
 
-#define LOG_PREDICTION 1
+#define LOG_PREDICTION 0
 
 extern const int kServerPort;
 extern const char* kHost;

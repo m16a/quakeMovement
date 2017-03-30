@@ -29,7 +29,7 @@
 
 // some constants
 
-#define NUM 10			// number of bodies
+#define NUM 100			// number of bodies
 #define NUMJ 9			// number of joints
 #define SIDE (0.1)		// side length of a box
 #define MASS (1.0)		// mass of a box
@@ -59,8 +59,7 @@ static dJointGroupID contactgroup;
 
 static dGeomID  ground;
 
-static int num = 4;
-
+static int num = 28;
 
 static float gViewRot[3] = {0.0f, 0.0f, 0.0f};
 static bool gFlying = true;
@@ -87,10 +86,8 @@ enum
 
 static int gMoveFlags = 0;
 
-void drawGeom(dGeomID g, const dReal *pos, const dReal *R, int show_aabb)
+void drawGeom(dGeomID g, const dReal *pos, const dReal *R)
 {
-    int i;
-	
     if (!g)
         return;
     if (!pos)
@@ -99,27 +96,11 @@ void drawGeom(dGeomID g, const dReal *pos, const dReal *R, int show_aabb)
         R = dGeomGetRotation(g);
 
     int type = dGeomGetClass(g);
-    if (type == dBoxClass) {
-
+    if (type == dBoxClass)
+		{
         dVector3 sides;
         dGeomBoxGetLengths (g,sides);
         dsDrawBox(pos,R,sides);
-    }
-
-    if (show_aabb) {
-        // draw the bounding box for this geom
-        dReal aabb[6];
-        dGeomGetAABB(g,aabb);
-        dVector3 bbpos;
-        for (i=0; i<3; i++)
-            bbpos[i] = 0.5*(aabb[i*2] + aabb[i*2+1]);
-        dVector3 bbsides;
-        for (i=0; i<3; i++)
-            bbsides[i] = aabb[i*2+1] - aabb[i*2];
-        dMatrix3 RI;
-        dRSetIdentity (RI);
-        dsSetColorAlpha(1,0,0,0.5);
-        dsDrawBox(bbpos,RI,bbsides);
     }
 }
 
@@ -134,7 +115,6 @@ void createTest()
   world = dWorldCreate();
   contactgroup = dJointGroupCreate(0);
 
-#if 1
 	//test box
 	obj[0].body = dBodyCreate(world);
 	dMassSetBoxTotal(&m, 1, 10000000, 10000000, 10000000);//disable rotation
@@ -149,23 +129,23 @@ void createTest()
 
 	dGeomSetBody(obj[0].geom, obj[0].body);
 
+	//ground contact check ray
 	obj[1].geom = dCreateRay(space, SIDE / 2.0f + 0.01);
 	dGeomRaySet(obj[1].geom, 0,0,0.2, 0,0,-SIDE/2.0f - 0.001);
 
-	//ground contact check ray
+	//test map 
+	obj[2].geom = dCreateBox(space, 1, 1, 0.5);
+  dGeomSetPosition(obj[2].geom, 5, 0, 0.25);
 
-#endif
+	obj[3].geom = dCreateBox(space, 1, 1, 0.5);
+  dGeomSetPosition(obj[3].geom, 3, 0, 0.25);
 
-
-	//test wall
-	obj[2].geom = dCreateBox(space, 0.1, 1, 1);
-  dGeomSetPosition(obj[2].geom, -1, 0, 1);
-
-	//test wall
-	obj[3].geom = dCreateBox(space, 0.1,1, 1);
-  dGeomSetPosition(obj[3].geom, 1, 0, 1);
-
-
+	for (int i=0; i<5; ++i)
+		for (int j = 0; j<5; ++j)
+		{
+			obj[5*i+j+4].geom = dCreateBox(space, 0.03, 0.03, 0.1);
+			dGeomSetPosition(obj[5*i+j+4].geom, 5 + i*0.25, 2 + j*0.25, 0.05);
+		}
 }
 
 // start simulation - set viewpoint
@@ -273,7 +253,6 @@ void createCMD()
 
 			c.yaw = gViewRot[0];
 			c.pitch = gViewRot[1];
-
 		}
 	}
 
@@ -291,7 +270,7 @@ static void step (float step, usrcmd c)
 		const dReal* v = dBodyGetLinearVel(obj[0].body);
 		float zVel = v[2];
 		if (c.jump)
-			zVel += kPlayerJumpVelZ;
+			zVel = kPlayerJumpVelZ;
 
 		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/kPlayerMaxSpeed), c.right / (100.0f/kPlayerMaxSpeed), zVel);
 	}
@@ -326,6 +305,9 @@ static void simLoop (int pause)
   dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
 	dBodySetLinearVel(obj[0].body, gPlayerState.vel[0], gPlayerState.vel[1], gPlayerState.vel[2]);
 
+	dsSetColorAlpha(0,1,0, 0.7);
+	drawGeom(obj[0].geom,0,0);
+
 	bool noprediction = 0;
 	if (!noprediction)
 	{
@@ -348,7 +330,7 @@ static void simLoop (int pause)
 				//check prediction here
 				float dist = (oldState.pos[0] - gPlayerState.pos[0])*(oldState.pos[0] - gPlayerState.pos[0])+(oldState.pos[1] - gPlayerState.pos[1])*(oldState.pos[1] - gPlayerState.pos[1])+(oldState.pos[2] - gPlayerState.pos[2])*(oldState.pos[2] - gPlayerState.pos[2]);
 				dist = sqrt(dist);
-				//if (dist > 0.1)
+				if (dist > 0.1)
 					std::cout << "[PREDICTION ERROR]:" << dist << "\n"; 
 			}
 
@@ -359,8 +341,8 @@ static void simLoop (int pause)
 			if (!msecs)
 				continue;
 
-			dsSetColor(1,1,0);
-			drawGeom(obj[0].geom,0,0,0);
+			dsSetColorAlpha(0,0,1, 0.3);
+			drawGeom(obj[0].geom,0,0);
 
 			float sec = msecs / 1000.f;
 			step(sec, c);
@@ -370,7 +352,6 @@ static void simLoop (int pause)
 			gPlayerState.pos[1] = pos[1];
 			gPlayerState.pos[2] = pos[2];
 		}
-		//gPlayerState = oldState;
 	}
 	else 
 	{
@@ -387,19 +368,15 @@ static void simLoop (int pause)
 	
 	//drawing
 	dsSetTexture(DS_WOOD);
-	for (int i=0; i<num; i++) {
-					if (0) {
-							dsSetColor(0,0.7,1);
-					} else if (obj[i].body && !dBodyIsEnabled(obj[i].body)) {
-							dsSetColor(1,0.8,0);
-					} else {
-							dsSetColor(1,1,0);
-					}
-					drawGeom(obj[i].geom,0,0,0);
+	dsSetColor(1,0,0);
+	drawGeom(obj[0].geom,0,0);
+	for (int i=1; i<num; i++)
+	{
+		dsSetColor(1,1,0);
+		drawGeom(obj[i].geom,0,0);
 	}
 
 	// NETWORK STAF
-
 	{
 		timeval tv;
 		gettimeofday(&tv, 0);

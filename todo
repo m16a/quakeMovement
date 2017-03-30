@@ -15,5 +15,6 @@
 [*]	add camera angles to packet 
 [*] support jump on server
 [*] fix jump smoothness by adding vel to player state
-[ ]	build simple map to test jumps 
+[*]	build simple map to test jumps 
+[ ] fix bug with jumps on packetloss 
 [ ] add inertia

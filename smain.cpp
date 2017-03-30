@@ -15,7 +15,7 @@
 
 // some constants
 
-#define NUM 10			// number of bodies
+#define NUM 100			// number of bodies
 #define NUMJ 9			// number of joints
 #define SIDE (0.1)		// side length of a box
 #define MASS (1.0)		// mass of a box
@@ -47,14 +47,12 @@ static dJointGroupID contactgroup;
 
 static dGeomID  ground;
 
-static int num = 4;
+static int num = 28;
 
 static float gViewRot[3] = {0.0f, 0.0f, 0.0f};
 
-void drawGeom(dGeomID g, const dReal *pos, const dReal *R, int show_aabb)
+void drawGeom(dGeomID g, const dReal *pos, const dReal *R)
 {
-    int i;
-	
     if (!g)
         return;
     if (!pos)
@@ -69,22 +67,6 @@ void drawGeom(dGeomID g, const dReal *pos, const dReal *R, int show_aabb)
         dGeomBoxGetLengths (g,sides);
         dsDrawBox(pos,R,sides);
     }
-
-    if (show_aabb) {
-        // draw the bounding box for this geom
-        dReal aabb[6];
-        dGeomGetAABB(g,aabb);
-        dVector3 bbpos;
-        for (i=0; i<3; i++)
-            bbpos[i] = 0.5*(aabb[i*2] + aabb[i*2+1]);
-        dVector3 bbsides;
-        for (i=0; i<3; i++)
-            bbsides[i] = aabb[i*2+1] - aabb[i*2];
-        dMatrix3 RI;
-        dRSetIdentity (RI);
-        dsSetColorAlpha(1,0,0,0.5);
-        dsDrawBox(bbpos,RI,bbsides);
-    }
 }
 
 // create the test system
@@ -98,7 +80,6 @@ void createTest()
   world = dWorldCreate();
   contactgroup = dJointGroupCreate(0);
 
-#if 1
 	//test box
 	obj[0].body = dBodyCreate(world);
 	dMassSetBoxTotal(&m, 1, 10000000, 10000000, 10000000);//disable rotation
@@ -112,15 +93,19 @@ void createTest()
 	obj[1].geom = dCreateRay(space, SIDE / 2.0f + 0.01);
 	dGeomRaySet(obj[1].geom, 0,0,0.2, 0,0,-SIDE/2.0f - 0.001);
 
-#endif
+	//test map 
+	obj[2].geom = dCreateBox(space, 1, 1, 0.5);
+  dGeomSetPosition(obj[2].geom, 5, 0, 0.25);
 
-	//test wall
-	obj[2].geom = dCreateBox(space, 0.1, 1, 1);
-  dGeomSetPosition(obj[2].geom, -1, 0, 1);
+	obj[3].geom = dCreateBox(space, 1, 1, 0.5);
+  dGeomSetPosition(obj[3].geom, 3, 0, 0.25);
 
-	//test wall
-	obj[3].geom = dCreateBox(space, 0.1,1, 1);
-  dGeomSetPosition(obj[3].geom, 1, 0, 1);
+	for (int i=0; i<5; ++i)
+		for (int j = 0; j<5; ++j)
+		{
+			obj[5*i+j+4].geom = dCreateBox(space, 0.03, 0.03, 0.1);
+			dGeomSetPosition(obj[5*i+j+4].geom, 5 + i*0.25, 2 + j*0.25, 0.05);
+		}
 }
 
 // start simulation - set viewpoint
@@ -195,7 +180,7 @@ static void step (float step, usrcmd c)
 
 		float zVel = v[2];
 		if (c.jump)
-			zVel += kPlayerJumpVelZ;
+			zVel = kPlayerJumpVelZ;
 
 		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/kPlayerMaxSpeed), c.right / (100.0f/kPlayerMaxSpeed), zVel);
 	}
@@ -204,7 +189,7 @@ static void step (float step, usrcmd c)
 	dJointGroupEmpty (contactgroup);
 
 	const dReal* pos = dBodyGetPosition(obj[0].body);
-	const dReal* rot = dBodyGetQuaternion(obj[0].body);
+	//const dReal* rot = dBodyGetQuaternion(obj[0].body);
 	const dReal* w = dBodyGetAngularVel(obj[0].body);
 	const dReal* v = dBodyGetLinearVel(obj[0].body);
 	
@@ -213,10 +198,11 @@ static void step (float step, usrcmd c)
 	dJointGroupEmpty(contactgroup);
 
 
-	float offset = 0.0;
-  float xyz[3] = {pos[0] - offset, pos[1] - offset, pos[2]+0.1};
-	float empty[3] = {c.yaw, c.pitch, 0};
-  dsSetViewpoint(xyz, empty);
+  float offset = 0.0;
+  float dir2d[2] = {cos(c.yaw / 180.0f * M_PI), sin(c.yaw / 180.0f * M_PI)};
+  float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.2};
+	float rot[3] = {c.yaw, c.pitch, 0};
+  dsSetViewpoint(xyz, rot);
 
 	//std::cout << "f:" << gFlying << "\n";
 	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
@@ -228,10 +214,13 @@ static void simLoop (int pause)
 	std::cout << "[FRAME]\n";
 #endif
 	dsSetTexture(DS_WOOD);
-	for (int i=0; i<num; i++)
+
+	dsSetColor(1,0,0);
+	drawGeom(obj[0].geom,0,0);
+	for (int i=1; i<num; i++)
 	{
 		dsSetColor(1,1,0);
-		drawGeom(obj[i].geom,0,0,0);
+		drawGeom(obj[i].geom,0,0);
 	}
 
 	timeval tv;
