@@ -292,6 +292,7 @@ static void step (float step, usrcmd c)
 		float zVel = v[2];
 		if (c.jump)
 			zVel += 1;
+
 		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/gPlayerMaxSpeed), c.right / (100.0f/gPlayerMaxSpeed), zVel);
 	}
 
@@ -323,6 +324,7 @@ static void simLoop (int pause)
 	gPlayerState =  gPlayerAckState;
 
   dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
+	dBodySetLinearVel(obj[0].body, gPlayerState.vel[0], gPlayerState.vel[1], gPlayerState.vel[2]);
 
 	bool noprediction = 0;
 	if (!noprediction)

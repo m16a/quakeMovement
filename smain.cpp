@@ -291,6 +291,11 @@ static void simLoop (int pause)
 						gServerPState.pos[1] = pos[1];
 						gServerPState.pos[2] = pos[2];
 
+						const dReal* v = dBodyGetLinearVel(obj[0].body);
+						gServerPState.vel[0] = v[0];
+						gServerPState.vel[1] = v[1];
+						gServerPState.vel[2] = v[2];
+
 						break;
 					}
 				case ID_NEW_INCOMING_CONNECTION:

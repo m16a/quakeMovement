@@ -31,7 +31,7 @@ unsigned char GetPacketIdentifier(RakNet::Packet *p)
 
 void Dump(const pstate& s)
 {
-	std::cout << "pstate t:" << s.lastCommandTime << " (" << s.pos[0] << ", " << s.pos[1] << ", " << s.pos[2] << ")\n";
+	std::cout << "pstate t:" << s.lastCommandTime << " pos:(" << s.pos[0] << ", " << s.pos[1] << ", " << s.pos[2] << ") vel:(" << s.vel[0] << ", " << s.vel[1] << ", " << s.vel[2] << ")\n";
 }
 
 void FillMsg(SvMsg& m)

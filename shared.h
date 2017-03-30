@@ -43,6 +43,7 @@ struct pstate
 	//usrcmd cmd;
 	RakNet::Time lastCommandTime;
 	float pos[3];
+	float vel[3];
 };
 
 void Dump(const pstate& s);
