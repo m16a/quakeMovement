@@ -239,13 +239,16 @@ static void simLoop (int pause)
 	gettimeofday(&tv, 0);
 	const double currT = tv.tv_sec + (double) tv.tv_usec / 1000000.0 ;
 	{
-		const float currT = GetCurrTime();
 		if (currT < gLastSentTime + 0.05)
 			return;
 
 		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), int(kPacketLoss * 100), kPacketExtraLagMS);
 		gLastSentTime = currT;
 		
+
+#if LOG_PACKETS 
+		std::cout << "check mail box\n";
+#endif
 
 		RakNet::Packet *packet;
 		for (packet=gPeer->Receive(); packet; gPeer->DeallocatePacket(packet), packet=gPeer->Receive())

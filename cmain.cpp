@@ -66,7 +66,7 @@ static bool gFlying = true;
 int gCmdIndex = 0;
 int gLastSentCmdIndex = 0;
 
-#define MAX_COMMANDS 64
+#define MAX_COMMANDS 128
 #define CMD_MASK (MAX_COMMANDS - 1)
 usrcmd commands[MAX_COMMANDS];
 
@@ -317,7 +317,7 @@ static void simLoop (int pause)
 		{
 			usrcmd& c = commands[i & CMD_MASK];
 				
-			if (c.serverTime < gPlayerState.lastCommandTime)
+			if (c.serverTime <= gPlayerState.lastCommandTime)
 				continue;
 
 			if (oldState.lastCommandTime == gPlayerState.lastCommandTime)
@@ -331,7 +331,7 @@ static void simLoop (int pause)
 
 			int msecs = c.serverTime - gPlayerState.lastCommandTime;
 #if LOG_PREDICTION 
-		std::cout << "\t s:" << msecs << " "; Dump(c);
+		std::cout << "\t s:" << msecs << " left:" << (gCmdIndex - i) << " "; Dump(c);
 #endif 
 			if (!msecs)
 				continue;
