@@ -253,7 +253,7 @@ void createCMD()
 				res[1] /= res_norm;
 		}
 
-		float speed = gPlayerMaxSpeed;
+		float speed = kPlayerMaxSpeed;
 		//if (!gFlying)
 		{
 			const dReal* v = dBodyGetLinearVel(obj[0].body);
@@ -263,8 +263,8 @@ void createCMD()
 
 			usrcmd& c = commands[(++gCmdIndex) & CMD_MASK];
 			c.serverTime = RakNet::GetTime();
-			c.forward = static_cast<signed char>(resVel[0] * 100.0f/gPlayerMaxSpeed);
-			c.right = static_cast<signed char>(resVel[1] * 100.0f/gPlayerMaxSpeed);
+			c.forward = static_cast<signed char>(resVel[0] * 100.0f/kPlayerMaxSpeed);
+			c.right = static_cast<signed char>(resVel[1] * 100.0f/kPlayerMaxSpeed);
 			c.jump = 0;
 			if (gMoveFlags & eMoveJump)
 				c.jump = 1;
@@ -291,9 +291,9 @@ static void step (float step, usrcmd c)
 		const dReal* v = dBodyGetLinearVel(obj[0].body);
 		float zVel = v[2];
 		if (c.jump)
-			zVel += 1;
+			zVel += kPlayerJumpVelZ;
 
-		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/gPlayerMaxSpeed), c.right / (100.0f/gPlayerMaxSpeed), zVel);
+		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/kPlayerMaxSpeed), c.right / (100.0f/kPlayerMaxSpeed), zVel);
 	}
 
 	dWorldQuickStep (world, step);
@@ -581,21 +581,21 @@ int main (int argc, char **argv)
 
   dInitODE2(0);
   //dRandSetSeed (time(0));
-  dRandSetSeed (1);
+  dRandSetSeed(1);
   createTest();
 
-  dWorldSetGravity (world,0,0,-0.8);
+  dWorldSetGravity(world,0,0,kGravityZ);
 
   ground = dCreatePlane (space,0,0,1,0);
   // run simulation
   //dsSimulationLoop (argc,argv,600, 50, 1024, 800,&fn);
-  dsSimulationLoop (argc,argv,600, 50, 800, 600,&fn);
+  dsSimulationLoop(argc,argv,600, 50, 800, 600,&fn);
 
 
 	gLastSentTime = GetCurrTime();
 
   dJointGroupDestroy(contactgroup);
-  dWorldDestroy (world);
+  dWorldDestroy(world);
   dCloseODE();
 
 	return 0;	

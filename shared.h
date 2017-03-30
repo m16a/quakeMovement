@@ -24,7 +24,9 @@ extern const char* kHost;
 extern const float kPacketLoss;
 extern const int kPacketExtraLagMS;
 
-extern float gPlayerMaxSpeed;
+extern const float kPlayerMaxSpeed;
+extern const float kGravityZ;
+extern const float kPlayerJumpVelZ;
 
 float GetCurrTime();
 unsigned char GetPacketIdentifier(RakNet::Packet *p);

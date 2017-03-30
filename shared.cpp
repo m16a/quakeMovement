@@ -8,11 +8,14 @@
 
 const int kServerPort =  60005;
 const char* kHost = "127.0.0.1";
-extern const float kPacketLoss = 0.0f;
-extern const int kPacketExtraLagMS = 0;
+const float kPacketLoss = 0.0f;
+const int kPacketExtraLagMS = 0;
 
 
-float gPlayerMaxSpeed = 1.0f;
+const float kPlayerMaxSpeed = 2.0f;
+const float kGravityZ = -9.8;
+extern const float kPlayerJumpVelZ = 4.0f;
+
 
 float GetCurrTime()
 {

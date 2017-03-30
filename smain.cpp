@@ -195,8 +195,9 @@ static void step (float step, usrcmd c)
 
 		float zVel = v[2];
 		if (c.jump)
-			zVel += 1;
-		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/gPlayerMaxSpeed), c.right / (100.0f/gPlayerMaxSpeed), zVel);
+			zVel += kPlayerJumpVelZ;
+
+		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/kPlayerMaxSpeed), c.right / (100.0f/kPlayerMaxSpeed), zVel);
 	}
 
 	dWorldQuickStep (world, step);
@@ -357,7 +358,7 @@ int main (int argc, char **argv)
   dRandSetSeed (1);
   createTest();
 
-  dWorldSetGravity (world,0,0,-0.8);
+  dWorldSetGravity (world,0,0,kGravityZ);
 
   ground = dCreatePlane (space,0,0,1,0);
   // run simulation
