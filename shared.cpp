@@ -8,11 +8,11 @@
 
 const int kServerPort =  60005;
 const char* kHost = "127.0.0.1";
-extern const float kPacketLoss = 0.0f;
-extern const int kPacketExtraLagMS = 0;
+extern const float kPacketLoss = 0.5f;
+extern const int kPacketExtraLagMS = 100;
 
 
-float gPlayerMaxSpeed = 5.0f;
+float gPlayerMaxSpeed = 1.0f;
 
 float GetCurrTime()
 {
@@ -47,7 +47,7 @@ void FillMsg(SvMsg& m)
 
 void Dump(SvMsg& m)
 {
-	std::cout << "t:" << m.serverTime << "(" << (int)m.forward << " " << (int)m.right << " " << (int)m.up << ")\n";
+	std::cout << "t:" << m.serverTime << " (" << (int)m.forward << " " << (int)m.right << " " << (int)m.up << ")\n";
 	/*
 	for (int i=0; i < sizeof(Msg); ++i)
 	{

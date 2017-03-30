@@ -352,7 +352,8 @@ int main (int argc, char **argv)
   fn.path_to_textures = DRAWSTUFF_TEXTURE_PATH;
 
   dInitODE2(0);
-  dRandSetSeed (time(0));
+  //dRandSetSeed (time(0));
+  dRandSetSeed (1);
   createTest();
 
   dWorldSetGravity (world,0,0,-0.8);

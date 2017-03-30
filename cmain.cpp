@@ -71,6 +71,7 @@ int gLastSentCmdIndex = 0;
 usrcmd commands[MAX_COMMANDS];
 
 pstate gPlayerState;
+pstate gPlayerAckState;
 
 enum 
 {
@@ -309,8 +310,9 @@ static void simLoop (int pause)
 	if (!noprediction)
 	{
 		pstate oldState = gPlayerState;
+		gPlayerState =  gPlayerAckState;
 #if LOG_PREDICTION 
-		std::cout << "\t prediction start:"; Dump(oldState);
+		std::cout << "\t prediction start:"; Dump(gPlayerState);
 #endif 
 		int i = gCmdIndex - MAX_COMMANDS + 1;
 		for (; i <= gCmdIndex; ++i)
@@ -320,12 +322,14 @@ static void simLoop (int pause)
 			if (c.serverTime <= gPlayerState.lastCommandTime)
 				continue;
 
+			//std::cout << "\t prediction inprog:"; Dump(oldState);
+			//std::cout << "\t prediction inprog:"; Dump(gPlayerState);
 			if (oldState.lastCommandTime == gPlayerState.lastCommandTime)
 			{
 				//check prediction here
 				float dist = (oldState.pos[0] - gPlayerState.pos[0])*(oldState.pos[0] - gPlayerState.pos[0])+(oldState.pos[1] - gPlayerState.pos[1])*(oldState.pos[1] - gPlayerState.pos[1])+(oldState.pos[2] - gPlayerState.pos[2])*(oldState.pos[2] - gPlayerState.pos[2]);
 				dist = sqrt(dist);
-				if (dist > 0.1)
+				//if (dist > 0.1)
 					std::cout << "[PREDICTION ERROR]:" << dist << "\n"; 
 			}
 
@@ -342,8 +346,13 @@ static void simLoop (int pause)
 			float sec = msecs / 1000.f;
 			step(sec, c);
 			gPlayerState.lastCommandTime = c.serverTime;
+			const dReal* pos = dBodyGetPosition(obj[0].body);
+			gPlayerState.pos[0] = pos[0];
+			gPlayerState.pos[1] = pos[1];
+			gPlayerState.pos[2] = pos[2];
+
 		}
-		gPlayerState = oldState;
+		//gPlayerState = oldState;
 	}
 	else 
 	{
@@ -412,7 +421,7 @@ static void simLoop (int pause)
 					{
 						ClMsg* m = reinterpret_cast<ClMsg*>(packet->data);
 						assert(packet->length == sizeof(ClMsg));
-						gPlayerState = m->state;
+						gPlayerAckState = m->state;
 
 #if LOG_PACKETS
 						std::cout << "ackState: "; Dump(*m);
@@ -549,7 +558,8 @@ int main (int argc, char **argv)
   fn.path_to_textures = DRAWSTUFF_TEXTURE_PATH;
 
   dInitODE2(0);
-  dRandSetSeed (time(0));
+  //dRandSetSeed (time(0));
+  dRandSetSeed (1);
   createTest();
 
   dWorldSetGravity (world,0,0,-0.8);

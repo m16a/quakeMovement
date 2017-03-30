@@ -9,7 +9,8 @@
 [*] review packet send policy
 [*] simulate bad net conditions	
 [*] remove bitstream sending 
-[ ] fix bugs on packet drop 
-[ ] fix bugs on packet latency 
+[*] fix bugs on packet drop 
+[*] fix bugs on packet latency 
+[ ] fix quick time flow on bad connection
 [ ] support jump on server
 [ ]	build simple map to test jumps 
