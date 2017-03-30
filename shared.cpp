@@ -8,7 +8,7 @@
 
 const int kServerPort =  60005;
 const char* kHost = "127.0.0.1";
-extern const float kPacketLoss = 0.5f;
+extern const float kPacketLoss = 0.7f;
 extern const int kPacketExtraLagMS = 100;
 
 

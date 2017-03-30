@@ -41,6 +41,8 @@ RakNet::RakPeerInterface* gPeer = 0;
 const float kStepSize = 0.01f;
 double gLastSentTime = 0; 
 
+RakNet::Time gLastCommandTime = 0;
+
 struct MyObject {
   dBodyID body;			// the body
   dGeomID geom;		// geometry representing this body
@@ -268,7 +270,6 @@ void createCMD()
 
 static void step (float step, usrcmd c)
 {
-	//std::cout << "\tstep t:" << step << " "; Dump(c);
 	gFlying = true;
 
 	
@@ -304,15 +305,17 @@ static void simLoop (int pause)
 	gFlying = true;
 	createCMD();
 	
+	pstate oldState = gPlayerState;
+	gPlayerState =  gPlayerAckState;
+
   dBodySetPosition(obj[0].body, gPlayerState.pos[0], gPlayerState.pos[1], gPlayerState.pos[2]);
 
 	bool noprediction = 0;
 	if (!noprediction)
 	{
-		pstate oldState = gPlayerState;
-		gPlayerState =  gPlayerAckState;
 #if LOG_PREDICTION 
 		std::cout << "\t prediction start:"; Dump(gPlayerState);
+		std::cout << "\t currPos:"; Dump(oldState);
 #endif 
 		int i = gCmdIndex - MAX_COMMANDS + 1;
 		for (; i <= gCmdIndex; ++i)
@@ -335,7 +338,7 @@ static void simLoop (int pause)
 
 			int msecs = c.serverTime - gPlayerState.lastCommandTime;
 #if LOG_PREDICTION 
-		std::cout << "\t s:" << msecs << " left:" << (gCmdIndex - i) << " "; Dump(c);
+		std::cout << "\t dt:" << msecs << " left:" << (gCmdIndex - i) << " "; Dump(c);
 #endif 
 			if (!msecs)
 				continue;
@@ -345,12 +348,11 @@ static void simLoop (int pause)
 
 			float sec = msecs / 1000.f;
 			step(sec, c);
-			gPlayerState.lastCommandTime = c.serverTime;
+			gPlayerState.lastCommandTime += msecs;
 			const dReal* pos = dBodyGetPosition(obj[0].body);
 			gPlayerState.pos[0] = pos[0];
 			gPlayerState.pos[1] = pos[1];
 			gPlayerState.pos[2] = pos[2];
-
 		}
 		//gPlayerState = oldState;
 	}
@@ -386,12 +388,20 @@ static void simLoop (int pause)
 		timeval tv;
 		gettimeofday(&tv, 0);
 		const double currT = tv.tv_sec + (double) tv.tv_usec / 1000000.0 ;
+		RakNet::Time currStateT = gPlayerState.lastCommandTime;
 		//if (currT < gLastSentTime + 0.05)
 			//return;
-		//std::cout << "ts:" << currT << " " << gLastSentTime << "\n";
+		double rt = currT-gLastSentTime;
+		double st = (currStateT-gLastCommandTime) / 1000.0f;
+
+
+		if (st > 2 * rt)
+			std::cout << "frame:" << rt<< " simulated:" << st<< "\n";
+
 		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), int(kPacketLoss * 100), kPacketExtraLagMS);
 
 		gLastSentTime = currT;
+		gLastCommandTime =  gPlayerState.lastCommandTime;
 
 		while (gLastSentCmdIndex <= gCmdIndex) 
 		{
@@ -566,7 +576,8 @@ int main (int argc, char **argv)
 
   ground = dCreatePlane (space,0,0,1,0);
   // run simulation
-  dsSimulationLoop (argc,argv,600, 50, 1024, 800,&fn);
+  //dsSimulationLoop (argc,argv,600, 50, 1024, 800,&fn);
+  dsSimulationLoop (argc,argv,600, 50, 800, 600,&fn);
 
 
 	gLastSentTime = GetCurrTime();

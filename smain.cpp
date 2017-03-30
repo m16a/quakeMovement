@@ -220,7 +220,7 @@ static void step (float step, usrcmd c)
 					drawGeom(obj[i].geom,0,0,0);
 	}
 
-	float offset = 1.0;
+	float offset = 0.0;
   float xyz[3] = {pos[0] - offset, pos[1] - offset, pos[2]+0.1};
 	float empty[3] = {0,0,0};
   dsSetViewpoint(xyz, empty);

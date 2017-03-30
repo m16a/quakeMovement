@@ -11,6 +11,7 @@
 [*] remove bitstream sending 
 [*] fix bugs on packet drop 
 [*] fix bugs on packet latency 
-[ ] fix quick time flow on bad connection
+[*] fix quick time flow on bad connection
 [ ] support jump on server
 [ ]	build simple map to test jumps 
+[	]	add camera angles to packet 
