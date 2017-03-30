@@ -192,7 +192,11 @@ static void step (float step, usrcmd c)
 	if (!gFlying)
 	{
 		const dReal* v = dBodyGetLinearVel(obj[0].body);
-		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/gPlayerMaxSpeed), c.right / (100.0f/gPlayerMaxSpeed), v[2]);
+
+		float zVel = v[2];
+		if (c.jump)
+			zVel += 1;
+		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/gPlayerMaxSpeed), c.right / (100.0f/gPlayerMaxSpeed), zVel);
 	}
 
 	dWorldQuickStep (world, step);

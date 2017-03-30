@@ -80,7 +80,9 @@ enum
 	eMoveFrwd = 1,
 	eMoveBck = 1 << 1,
 	eMoveLeft = 1 << 2,
-	eMoveRight = 1 << 3
+	eMoveRight = 1 << 3,
+	eMoveJump = 1 << 4
+
 };
 
 static int gMoveFlags = 0;
@@ -263,6 +265,15 @@ void createCMD()
 			c.serverTime = RakNet::GetTime();
 			c.forward = static_cast<signed char>(resVel[0] * 100.0f/gPlayerMaxSpeed);
 			c.right = static_cast<signed char>(resVel[1] * 100.0f/gPlayerMaxSpeed);
+			c.jump = 0;
+			if (gMoveFlags & eMoveJump)
+				c.jump = 1;
+			
+			gMoveFlags &= ~eMoveJump;
+
+			c.yaw = gViewRot[0];
+			c.pitch = gViewRot[1];
+
 		}
 	}
 
@@ -278,7 +289,10 @@ static void step (float step, usrcmd c)
 	if (!gFlying)
 	{
 		const dReal* v = dBodyGetLinearVel(obj[0].body);
-		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/gPlayerMaxSpeed), c.right / (100.0f/gPlayerMaxSpeed), v[2]);
+		float zVel = v[2];
+		if (c.jump)
+			zVel += 1;
+		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/gPlayerMaxSpeed), c.right / (100.0f/gPlayerMaxSpeed), zVel);
 	}
 
 	dWorldQuickStep (world, step);
@@ -407,12 +421,8 @@ static void simLoop (int pause)
 		{
 			SvMsg m;
 			FillMsg(m);
-			usrcmd c;
-			c.forward = commands[gLastSentCmdIndex & CMD_MASK].forward;
-			c.right = commands[gLastSentCmdIndex & CMD_MASK].right;
+			usrcmd& c = commands[gLastSentCmdIndex & CMD_MASK];
 			m.serverTime = commands[gLastSentCmdIndex & CMD_MASK].serverTime;
-			c.yaw = gViewRot[0];
-			c.pitch = gViewRot[1];
 			m.cmd = c;
 
 #if LOG_PACKETS
@@ -512,11 +522,7 @@ static void command (int cmd)
 			gMoveFlags |= eMoveRight; 
 			break;
 		case 32://space
-			if (!gFlying)
-			{
-				const dReal* v = dBodyGetLinearVel(obj[0].body);
-				dBodySetLinearVel(obj[0].body, v[0], v[1], v[2] + 1);
-			}
+			gMoveFlags |= eMoveJump; 
 			break;
 		default:
 			std::cout << cmd;
