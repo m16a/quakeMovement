@@ -114,7 +114,6 @@ void createTest()
 
 #endif
 
-
 	//test wall
 	obj[2].geom = dCreateBox(space, 0.1, 1, 1);
   dGeomSetPosition(obj[2].geom, -1, 0, 1);
@@ -208,17 +207,6 @@ static void step (float step, usrcmd c)
 	// remove all contact joints
 	dJointGroupEmpty(contactgroup);
 
-	dsSetTexture(DS_WOOD);
-	for (int i=0; i<num; i++) {
-					if (0) {
-							dsSetColor(0,0.7,1);
-					} else if (obj[i].body && !dBodyIsEnabled(obj[i].body)) {
-							dsSetColor(1,0.8,0);
-					} else {
-							dsSetColor(1,1,0);
-					}
-					drawGeom(obj[i].geom,0,0,0);
-	}
 
 	float offset = 0.0;
   float xyz[3] = {pos[0] - offset, pos[1] - offset, pos[2]+0.1};
@@ -234,6 +222,12 @@ static void simLoop (int pause)
 #if LOG_PACKETS 
 	std::cout << "[FRAME]\n";
 #endif
+	dsSetTexture(DS_WOOD);
+	for (int i=0; i<num; i++)
+	{
+		dsSetColor(1,1,0);
+		drawGeom(obj[i].geom,0,0,0);
+	}
 
 	timeval tv;
 	gettimeofday(&tv, 0);

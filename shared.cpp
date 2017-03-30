@@ -8,8 +8,8 @@
 
 const int kServerPort =  60005;
 const char* kHost = "127.0.0.1";
-extern const float kPacketLoss = 0.7f;
-extern const int kPacketExtraLagMS = 100;
+extern const float kPacketLoss = 0.0f;
+extern const int kPacketExtraLagMS = 0;
 
 
 float gPlayerMaxSpeed = 1.0f;
