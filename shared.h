@@ -1,7 +1,6 @@
 #ifndef _SHARED_H_
 #define _SHARED_H_
 
-#define _DEBUG
 
 #include "raknet/RakPeerInterface.h"
 #include "raknet/RakNetTypes.h"
@@ -10,13 +9,15 @@
 #include "raknet/BitStream.h"
 
 
+#define LOG_PACKETS 1
+
 enum 
 {
 	ID_SV_MSG = ID_USER_PACKET_ENUM+1,
 	ID_CL_MSG 
 };
 
-#define USE_BIT_STREAM 0
+#define LOG_PREDICTION 1
 
 extern const int kServerPort;
 extern const char* kHost;

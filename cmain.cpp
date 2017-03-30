@@ -296,7 +296,10 @@ static void step (float step, usrcmd c)
 
 static void simLoop (int pause)
 {
-	std::cout << "simStep\n";
+#if LOG_PACKETS
+	std::cout << "[FRAME]\n";
+#endif
+
 	gFlying = true;
 	createCMD();
 	
@@ -306,6 +309,9 @@ static void simLoop (int pause)
 	if (!noprediction)
 	{
 		pstate oldState = gPlayerState;
+#if LOG_PREDICTION 
+		std::cout << "\t prediction start:"; Dump(oldState);
+#endif 
 		int i = gCmdIndex - MAX_COMMANDS + 1;
 		for (; i <= gCmdIndex; ++i)
 		{
@@ -324,6 +330,9 @@ static void simLoop (int pause)
 			}
 
 			int msecs = c.serverTime - gPlayerState.lastCommandTime;
+#if LOG_PREDICTION 
+		std::cout << "\t s:" << msecs << " "; Dump(c);
+#endif 
 			if (!msecs)
 				continue;
 
@@ -370,7 +379,7 @@ static void simLoop (int pause)
 		const double currT = tv.tv_sec + (double) tv.tv_usec / 1000000.0 ;
 		//if (currT < gLastSentTime + 0.05)
 			//return;
-		std::cout << "ts:" << currT << " " << gLastSentTime << "\n";
+		//std::cout << "ts:" << currT << " " << gLastSentTime << "\n";
 		dsSetInfoToDraw(1.0f/(currT - gLastSentTime), int(kPacketLoss * 100), kPacketExtraLagMS);
 
 		gLastSentTime = currT;
@@ -383,22 +392,14 @@ static void simLoop (int pause)
 			m.right = commands[gLastSentCmdIndex & CMD_MASK].right;
 			m.serverTime = commands[gLastSentCmdIndex & CMD_MASK].serverTime;
 
-			//std::cout << "packet send: "; Dump(m);
+#if LOG_PACKETS
+			std::cout << "packet send: "; Dump(m);
+#endif
+
 			gLastSentCmdIndex++; 
 
-#if USE_BIT_STREAM 
-			RakNet::BitStream myBitStream;
-			myBitStream.Write(m.useTimeStamp);
-			myBitStream.Write(m.timeStamp);
-			myBitStream.Write(m.typeId);
-			myBitStream.Write(m.x);
-			myBitStream.Write(m.y);
-			myBitStream.Write(m.z);
-			gPeer->Send(&myBitStream, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
-#else
 			ReverseTimeStamp(m);
 			gPeer->Send(reinterpret_cast<char*>(&m), sizeof(SvMsg), HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
-#endif
 		}	
 
 		RakNet::Packet *packet;
@@ -412,7 +413,10 @@ static void simLoop (int pause)
 						ClMsg* m = reinterpret_cast<ClMsg*>(packet->data);
 						assert(packet->length == sizeof(ClMsg));
 						gPlayerState = m->state;
-						//std::cout << "ackState: "; Dump(*m);
+
+#if LOG_PACKETS
+						std::cout << "ackState: "; Dump(*m);
+#endif
 						break;
 					}
 				case ID_SV_MSG: 

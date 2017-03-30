@@ -231,6 +231,10 @@ static void step (float step, usrcmd c)
 
 static void simLoop (int pause)
 {
+#if LOG_PACKETS 
+	std::cout << "[FRAME]\n";
+#endif
+
 	timeval tv;
 	gettimeofday(&tv, 0);
 	const double currT = tv.tv_sec + (double) tv.tv_usec / 1000000.0 ;
@@ -252,28 +256,16 @@ static void simLoop (int pause)
 				case ID_SV_MSG: 
 					{
 						SvMsg m;
-#if USE_BIT_STREAN
-						BitStream myBitStream(packet->data, packet->length, false); // The false is for efficiency so we don't make a copy of the passed data
-						myBitStream.Read(m.useTimeStamp);
-						myBitStream.Read(m.timeStamp);
-						myBitStream.Read(m.typeId);
-						myBitStream.Read(m.x);
-						myBitStream.Read(m.y);
-						myBitStream.Read(m.z);
-						m.useTimeStamp += peer->GetClockDifferential(packet);
-						Dump(m);
-						
-#else
 						SvMsg* pm = reinterpret_cast<SvMsg*>(packet->data);
 						assert(packet->length == sizeof(SvMsg));
 						m = *pm;
 						ReverseTimeStamp(m);
 						m.serverTime += gPeer->GetClockDifferential(packet);
-						Dump(m);
-#endif
-						//std::cout << "my_msg:" << packet->length << ":" << sizeof(Msg) << "\n";
 						
 						int  msec = m.serverTime - gServerPState.lastCommandTime;
+#if LOG_PACKETS 
+						std::cout << "receive. to simulate:" << msec << " "; Dump(m);
+#endif
 						if (!msec)
 						{
 
@@ -318,7 +310,9 @@ static void simLoop (int pause)
 		m.state = gServerPState;
 		if (gServerPState.lastCommandTime > 0)
 		{
+#if LOG_PACKETS 
 			std::cout << "send state: "; Dump(m);
+#endif
 			gPeer->Send(reinterpret_cast<char*>(&m), sizeof(ClMsg), HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 		}
 	}
