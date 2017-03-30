@@ -210,7 +210,7 @@ static void step (float step, usrcmd c)
 
 	float offset = 0.0;
   float xyz[3] = {pos[0] - offset, pos[1] - offset, pos[2]+0.1};
-	float empty[3] = {0,0,0};
+	float empty[3] = {c.yaw, c.pitch, 0};
   dsSetViewpoint(xyz, empty);
 
 	//std::cout << "f:" << gFlying << "\n";
@@ -275,9 +275,7 @@ static void simLoop (int pause)
 						float sec = msec / 1000.f;
 						
 						//obtain input velocity from packet
-						usrcmd c;
-						c.forward = m.forward;
-						c.right = m.right;
+						usrcmd& c = m.cmd;
 
 						//simulation
 						step(sec, c);

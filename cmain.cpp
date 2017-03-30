@@ -407,9 +407,13 @@ static void simLoop (int pause)
 		{
 			SvMsg m;
 			FillMsg(m);
-			m.forward = commands[gLastSentCmdIndex & CMD_MASK].forward;
-			m.right = commands[gLastSentCmdIndex & CMD_MASK].right;
+			usrcmd c;
+			c.forward = commands[gLastSentCmdIndex & CMD_MASK].forward;
+			c.right = commands[gLastSentCmdIndex & CMD_MASK].right;
 			m.serverTime = commands[gLastSentCmdIndex & CMD_MASK].serverTime;
+			c.yaw = gViewRot[0];
+			c.pitch = gViewRot[1];
+			m.cmd = c;
 
 #if LOG_PACKETS
 			std::cout << "packet send: "; Dump(m);

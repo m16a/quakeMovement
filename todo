@@ -12,6 +12,6 @@
 [*] fix bugs on packet drop 
 [*] fix bugs on packet latency 
 [*] fix quick time flow on bad connection
+[*]	add camera angles to packet 
 [ ] support jump on server
 [ ]	build simple map to test jumps 
-[	]	add camera angles to packet 

@@ -33,6 +33,7 @@ struct usrcmd
 {
 	RakNet::Time serverTime;
 	signed char forward, right, jump;
+	float yaw, pitch;
 };
 
 void Dump(const usrcmd& c);
@@ -53,7 +54,8 @@ struct SvMsg
 	unsigned char useTimeStamp; // Assign ID_TIMESTAMP to this
 	RakNet::Time serverTime; // Put the system time in here returned by RakNet::GetTime()
 	unsigned char typeId; // You should put here an enum you defined after the last one defined in MessageIdentifiers.h, lets say ID_SET_TIMED_MINE
-	signed char forward, right, up;
+	//signed char forward, right, up;
+	usrcmd cmd;
 
 	//RakNet::NetworkID networkId; // NetworkID of the mine, used as a common method to refer to the mine on different computers
 	//RakNet::SystemAddress systemAddress; // The SystenAddress of the player that owns the mine

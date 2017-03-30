@@ -39,15 +39,16 @@ void FillMsg(SvMsg& m)
 	m.useTimeStamp = ID_TIMESTAMP;
 	m.serverTime = RakNet::GetTime();
 	m.typeId = ID_SV_MSG;
-	m.forward = 0;
-	m.right = 0;
-	m.up = 0;
+	m.cmd.forward = 0;
+	m.cmd.right = 0;
+	m.cmd.jump = 0;
 }
 
 
 void Dump(SvMsg& m)
 {
-	std::cout << "t:" << m.serverTime << " (" << (int)m.forward << " " << (int)m.right << " " << (int)m.up << ")\n";
+	std::cout << "t:" << m.serverTime << " ";
+	Dump(m.cmd);
 	/*
 	for (int i=0; i < sizeof(Msg); ++i)
 	{
@@ -69,5 +70,5 @@ void Dump(ClMsg& m)
 
 void Dump(const usrcmd& c)
 {
-	std::cout << "t:" << c.serverTime << "(" << (int)c.forward << " " << (int)c.right << " " << (int)c.jump << ")\n";
+	std::cout << "t:" << c.serverTime << "(" << (int)c.forward << " " << (int)c.right << " " << (int)c.jump << ") rot(" << c.yaw << ", " << c.pitch <<")\n";
 }
