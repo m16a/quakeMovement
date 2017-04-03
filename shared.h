@@ -34,6 +34,7 @@ unsigned char GetPacketIdentifier(RakNet::Packet *p);
 struct usrcmd
 {
 	RakNet::Time serverTime;
+	RakNet::Time cmdTime;
 	signed char forward, right, jump;
 	float yaw, pitch;
 };

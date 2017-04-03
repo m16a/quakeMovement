@@ -172,6 +172,10 @@ static void step (float step, usrcmd c)
 	gFlying = true;
 
 	
+	//std::cout << "f:" << gFlying << "\n";
+	const dReal* pos = dBodyGetPosition(obj[0].body);
+	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
+
 	dSpaceCollide (space,0,&nearCallback);
 	
 	if (!gFlying)
@@ -188,7 +192,6 @@ static void step (float step, usrcmd c)
 	dWorldQuickStep (world, step);
 	dJointGroupEmpty (contactgroup);
 
-	const dReal* pos = dBodyGetPosition(obj[0].body);
 	//const dReal* rot = dBodyGetQuaternion(obj[0].body);
 	const dReal* w = dBodyGetAngularVel(obj[0].body);
 	const dReal* v = dBodyGetLinearVel(obj[0].body);
@@ -198,14 +201,12 @@ static void step (float step, usrcmd c)
 	dJointGroupEmpty(contactgroup);
 
 
-  float offset = 0.0;
+  float offset = 0.5;
   float dir2d[2] = {cos(c.yaw / 180.0f * M_PI), sin(c.yaw / 180.0f * M_PI)};
   float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.2};
 	float rot[3] = {c.yaw, c.pitch, 0};
   dsSetViewpoint(xyz, rot);
 
-	//std::cout << "f:" << gFlying << "\n";
-	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
 }
 
 static void simLoop (int pause)
@@ -253,7 +254,8 @@ static void simLoop (int pause)
 						ReverseTimeStamp(m);
 						m.serverTime += gPeer->GetClockDifferential(packet);
 						
-						int  msec = m.serverTime - gServerPState.lastCommandTime;
+						//int  msec = m.serverTime - gServerPState.lastCommandTime;
+						int  msec = m.cmd.cmdTime; 
 #if LOG_PACKETS 
 						std::cout << "receive. to simulate:" << msec << " "; Dump(m);
 #endif
@@ -270,6 +272,10 @@ static void simLoop (int pause)
 						
 						//obtain input velocity from packet
 						usrcmd& c = m.cmd;
+						
+						//we already simulate this cmd
+						if (c.serverTime <= gServerPState.lastCommandTime)
+							continue;
 
 						//simulation
 						step(sec, c);

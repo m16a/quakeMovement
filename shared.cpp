@@ -9,7 +9,7 @@
 const int kServerPort =  60005;
 const char* kHost = "127.0.0.1";
 const float kPacketLoss = 0.5f;
-const int kPacketExtraLagMS = 0;
+const int kPacketExtraLagMS = 100;
 
 
 const float kPlayerMaxSpeed = 2.0f;
@@ -34,7 +34,7 @@ unsigned char GetPacketIdentifier(RakNet::Packet *p)
 
 void Dump(const pstate& s)
 {
-	std::cout << "pstate t:" << s.lastCommandTime << " pos:(" << s.pos[0] << ", " << s.pos[1] << ", " << s.pos[2] << ") vel:(" << s.vel[0] << ", " << s.vel[1] << ", " << s.vel[2] << ")\n";
+	std::cout << "pstate t:" << s.lastCommandTime << std::fixed << std::setprecision(3) << " pos:(" << s.pos[0] << ", " << s.pos[1] << ", " << s.pos[2] << ") vel:(" << s.vel[0] << ", " << s.vel[1] << ", " << s.vel[2] << ")\n";
 }
 
 void FillMsg(SvMsg& m)
@@ -73,5 +73,5 @@ void Dump(ClMsg& m)
 
 void Dump(const usrcmd& c)
 {
-	std::cout << "t:" << c.serverTime << "(" << (int)c.forward << " " << (int)c.right << " " << (int)c.jump << ") rot(" << c.yaw << ", " << c.pitch <<")\n";
+	std::cout << "t:" << c.serverTime << " cmdt:" << c.cmdTime << " (" << (int)c.forward << " " << (int)c.right << " " << (int)c.jump << ") rot(" << c.yaw << ", " << c.pitch <<")\n";
 }

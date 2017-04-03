@@ -246,8 +246,21 @@ void createCMD()
 			c.forward = static_cast<signed char>(resVel[0] * 100.0f/kPlayerMaxSpeed);
 			c.right = static_cast<signed char>(resVel[1] * 100.0f/kPlayerMaxSpeed);
 			c.jump = 0;
+			
+			if (gCmdIndex == 1)
+			{
+				c.cmdTime = 16;
+			}	
+			else
+			{
+				c.cmdTime = c.serverTime - commands[(gCmdIndex-1) & CMD_MASK].serverTime;
+			}
+				
 			if (gMoveFlags & eMoveJump)
+			{
 				c.jump = 1;
+				//std::cout << "create jump cmd\n";
+			}
 			
 			gMoveFlags &= ~eMoveJump;
 
@@ -263,6 +276,10 @@ static void step (float step, usrcmd c)
 	gFlying = true;
 
 	
+	//std::cout << "f:" << gFlying << "\n";
+	const dReal* pos = dBodyGetPosition(obj[0].body);
+	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
+
 	dSpaceCollide (space,0,&nearCallback);
 	
 	if (!gFlying)
@@ -270,7 +287,10 @@ static void step (float step, usrcmd c)
 		const dReal* v = dBodyGetLinearVel(obj[0].body);
 		float zVel = v[2];
 		if (c.jump)
+		{
 			zVel = kPlayerJumpVelZ;
+			//std::cout << "jumping\n";
+		}
 
 		dBodySetLinearVel(obj[0].body, c.forward / (100.0f/kPlayerMaxSpeed), c.right / (100.0f/kPlayerMaxSpeed), zVel);
 	}
@@ -278,7 +298,6 @@ static void step (float step, usrcmd c)
 	dWorldQuickStep (world, step);
 	dJointGroupEmpty (contactgroup);
 
-	const dReal* pos = dBodyGetPosition(obj[0].body);
 	const dReal* rot = dBodyGetQuaternion(obj[0].body);
 	const dReal* w = dBodyGetAngularVel(obj[0].body);
 	const dReal* v = dBodyGetLinearVel(obj[0].body);
@@ -286,8 +305,6 @@ static void step (float step, usrcmd c)
 	// remove all contact joints
 	dJointGroupEmpty(contactgroup);
 
-	//std::cout << "f:" << gFlying << "\n";
-	dGeomRaySet(obj[1].geom, pos[0], pos[1], pos[2], 0,0,-SIDE/2.0f - 0.001);
 }
 
 static void simLoop (int pause)
@@ -351,6 +368,14 @@ static void simLoop (int pause)
 			gPlayerState.pos[0] = pos[0];
 			gPlayerState.pos[1] = pos[1];
 			gPlayerState.pos[2] = pos[2];
+
+			const dReal* vel = dBodyGetLinearVel(obj[0].body);
+			gPlayerState.vel[0] = vel[0];
+			gPlayerState.vel[1] = vel[1];
+			gPlayerState.vel[2] = vel[2];
+#if LOG_PREDICTION 
+		std::cout << "\t\t"; Dump(gPlayerState);
+#endif 
 		}
 	}
 	else 
@@ -360,10 +385,10 @@ static void simLoop (int pause)
 		step(0.001, empty);
 	}
 
-  float offset = 0.0;
+  float offset = 0.5;
 	const dReal* pos = dBodyGetPosition(obj[0].body);
   float dir2d[2] = {cos(gViewRot[0] / 180.0f * M_PI), sin(gViewRot[0] / 180.0f * M_PI)};
-  float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.1};
+  float xyz[3] = {pos[0] - offset*dir2d[0], pos[1] - offset*dir2d[1], pos[2]+0.2};
   dsSetViewpoint(xyz,gViewRot);
 	
 	//drawing
@@ -395,6 +420,11 @@ static void simLoop (int pause)
 
 		gLastSentTime = currT;
 		gLastCommandTime =  gPlayerState.lastCommandTime;
+
+		if (gLastSentCmdIndex < 10)
+			gLastSentCmdIndex = 0;
+		else 
+			gLastSentCmdIndex -= 10; 
 
 		while (gLastSentCmdIndex <= gCmdIndex) 
 		{
