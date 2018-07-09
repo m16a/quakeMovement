@@ -6,7 +6,7 @@ CMakeCache.txt
 *.moc_parameters
 *.cmake
 *.out
-*.mp4
+mp4
 Makefile
 tags
 client
